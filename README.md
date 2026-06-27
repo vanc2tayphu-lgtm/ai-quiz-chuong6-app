@@ -32,10 +32,35 @@ streamlit run streamlit_app.py
 4. Main file path: `streamlit_app.py`.
 5. Deploy.
 
-## Google Apps Script
+## Google Sheet và Google Apps Script
 
 Mở file `google_apps_script.gs`, làm theo hướng dẫn trong phần chú thích đầu file.
 Sau khi deploy Apps Script dạng Web App, copy URL và dán vào app khi tạo bài.
+
+Thiết lập nhanh:
+
+1. Tạo Google Sheet mới.
+2. Vào `Extensions -> Apps Script`.
+3. Dán toàn bộ nội dung file `google_apps_script.gs`.
+4. Bấm `Deploy -> New deployment -> Web app`.
+5. Chọn `Execute as: Me`.
+6. Chọn `Who has access: Anyone`.
+7. Copy `Web app URL`.
+8. Dán URL này vào ô `Google Apps Script Web App URL` trong app Streamlit.
+
+Khi học sinh nộp bài, Google Sheet sẽ tự có 2 trang:
+
+- `KetQua`: điểm tổng hợp mỗi lượt nộp.
+- `ChiTiet`: từng câu hỏi, đáp án học sinh chọn, đáp án đúng và trạng thái đúng/sai.
+
+## Giao diện học sinh trên điện thoại
+
+Trang làm bài của học sinh được thiết kế mobile-first:
+
+- Học sinh nhập họ tên và lớp ngay trên trang, không cần mở sidebar.
+- Đáp án là các nút lớn, xếp dọc để dễ bấm trên điện thoại.
+- Học sinh phải chọn đủ đáp án mới nộp được bài hợp lệ.
+- Sau khi nộp, app hiển thị điểm và gửi kết quả về Google Sheet nếu đã cấu hình Apps Script URL.
 
 ## Gợi ý dùng trong sáng kiến
 
