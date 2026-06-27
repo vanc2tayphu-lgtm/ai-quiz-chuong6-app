@@ -304,7 +304,11 @@ def generate_questions(topic: str, qtype: str, count: int, seed: int | None = No
     if qtype not in QUESTION_TYPES:
         raise ValueError(f"Unknown question type: {qtype}")
     rng = random.Random(seed)
-    return [GENERATORS[topic](rng, qtype) for _ in range(count)]
+    questions = [GENERATORS[topic](rng, qtype) for _ in range(count)]
+    stable_seed = seed if seed is not None else "random"
+    for index, question in enumerate(questions, start=1):
+        question.id = f"{topic}-{qtype}-{stable_seed}-{index}"
+    return questions
 
 
 def assignment_payload(topic: str, qtype: str, count: int, title: str, teacher: str, gas_url: str, seed: int | None = None) -> dict:
