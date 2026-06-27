@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime
+from io import BytesIO
 
 import requests
 import streamlit as st
@@ -61,6 +63,40 @@ def apply_mobile_css() -> None:
         .question-preview {
             border-left: 6px solid #2563eb;
             background: linear-gradient(90deg, #ffffff 0%, #f8fbff 100%);
+        }
+        .question-card {
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-left: 6px solid #2563eb;
+            border-radius: 14px;
+            padding: 0.95rem 1.05rem;
+            margin-bottom: 0.85rem;
+            background: linear-gradient(90deg, #ffffff 0%, #f8fbff 100%);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.045);
+        }
+        .quiz-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+        .quiz-meta-item {
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            border-radius: 14px;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.84);
+        }
+        .quiz-meta-item span {
+            display: block;
+            color: #64748b;
+            font-size: 0.78rem;
+            margin-bottom: 0.18rem;
+        }
+        .quiz-meta-item strong {
+            color: #0f172a;
+            font-size: 1rem;
+        }
+        div[data-testid="stTabs"] button {
+            font-weight: 700;
         }
         div[data-testid="stSidebarContent"] {
             background: linear-gradient(180deg, #eff6ff 0%, #f0fdf4 100%);
@@ -149,6 +185,9 @@ def apply_mobile_css() -> None:
             }
             .teacher-link input {
                 font-size: 0.82rem !important;
+            }
+            .quiz-meta-grid {
+                grid-template-columns: 1fr 1fr;
             }
         }
         </style>
@@ -341,6 +380,97 @@ def score_answer(index: int, q: dict, selected) -> tuple[int, int, list[dict]]:
     )
 
 
+def plain_math_text(text: str) -> str:
+    replacements = {
+        "\\mathbb{R}": "R",
+        "\\infty": "∞",
+        "\\cup": "∪",
+        "\\ge": "≥",
+        "\\le": "≤",
+        "\\Delta": "Δ",
+        "\\sqrt": "√",
+        "\\frac": "",
+        "\\cdot": ".",
+        "\\Leftrightarrow": "⇔",
+    }
+    cleaned = text.replace("$", "")
+    for old, new in replacements.items():
+        cleaned = cleaned.replace(old, new)
+    cleaned = re.sub(r"\\[a-zA-Z]+", "", cleaned)
+    cleaned = cleaned.replace("{", "").replace("}", "")
+    return cleaned
+
+
+def build_docx_bytes(payload: dict, questions: list) -> bytes:
+    from docx import Document
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.shared import Inches, Pt, RGBColor
+
+    doc = Document()
+    section = doc.sections[0]
+    section.top_margin = Inches(0.7)
+    section.bottom_margin = Inches(0.7)
+    section.left_margin = Inches(0.8)
+    section.right_margin = Inches(0.8)
+
+    styles = doc.styles
+    styles["Normal"].font.name = "Arial"
+    styles["Normal"].font.size = Pt(11)
+
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = title.add_run(plain_math_text(payload["title"]).upper())
+    run.bold = True
+    run.font.size = Pt(16)
+    run.font.color.rgb = RGBColor(30, 64, 175)
+
+    subtitle = doc.add_paragraph()
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subtitle.add_run(f"{lesson_label_for_topic(payload['topic'])} | {TOPICS[payload['topic']]}").bold = True
+
+    meta = doc.add_paragraph()
+    meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    meta.add_run(
+        f"Mã đề: {payload['seed']} | Mã bài: {payload['assignment_id']} | Loại câu hỏi: {QUESTION_TYPES[payload['qtype']]}"
+    )
+
+    doc.add_paragraph("Họ và tên: ...............................................  Lớp: ................  Ngày: ....../....../......")
+
+    for index, q in enumerate(questions, 1):
+        q_para = doc.add_paragraph()
+        q_para.paragraph_format.space_before = Pt(8)
+        q_para.add_run(f"Câu {index}. ").bold = True
+        q_para.add_run(plain_math_text(q.prompt))
+        if q.qtype == "mcq":
+            for label, option in zip(["A", "B", "C", "D"], q.options):
+                doc.add_paragraph(f"{label}. {plain_math_text(option)}", style="List Bullet")
+        elif q.qtype == "true_false":
+            for statement in q.statements or []:
+                doc.add_paragraph(f"{statement['label']}) {plain_math_text(statement['text'])}", style="List Bullet")
+        else:
+            doc.add_paragraph("Đáp án: □ □ □ □")
+
+    doc.add_page_break()
+    answer_title = doc.add_paragraph()
+    answer_title.add_run("ĐÁP ÁN VÀ HƯỚNG DẪN").bold = True
+    for index, q in enumerate(questions, 1):
+        item = doc.add_paragraph()
+        item.add_run(f"Câu {index}. ").bold = True
+        item.add_run(f"Đáp án: {plain_math_text(q.answer)}")
+        if q.statements:
+            for statement in q.statements:
+                doc.add_paragraph(
+                    f"{statement['label']}) {statement['answer']} - {plain_math_text(statement['explanation'])}",
+                    style="List Bullet",
+                )
+        else:
+            doc.add_paragraph(plain_math_text(q.explanation))
+
+    buffer = BytesIO()
+    doc.save(buffer)
+    return buffer.getvalue()
+
+
 def google_sheet_help() -> None:
     with st.expander("Thiết lập Google Sheet nhận kết quả"):
         st.markdown(
@@ -369,73 +499,114 @@ def teacher_page() -> None:
         unsafe_allow_html=True,
     )
 
-    with st.sidebar:
-        st.header("Cấu hình bài tập")
-        title = st.text_input("Tên bài tập", "Luyện tập Chương 6 - Toán 10")
-        teacher = st.text_input("Tên giáo viên", "")
-        lesson_keys = list(LESSONS)
-        lesson = st.selectbox("Chọn bài", lesson_keys, format_func=lambda k: LESSONS[k]["label"])
-        topic_options = LESSONS[lesson]["topics"]
-        topic = st.selectbox("Dạng cụ thể", topic_options, format_func=lambda k: TOPICS[k])
-        qtype = st.radio("Loại câu hỏi", list(QUESTION_TYPES), format_func=lambda k: QUESTION_TYPES[k])
-        count = st.slider("Số câu", min_value=3, max_value=30, value=10)
-        seed = st.number_input("Mã đề/seed", min_value=1, max_value=999999, value=12345, step=1)
-        gas_url = st.text_input(
-            "Google Apps Script Web App URL",
-            value=default_gas_url(),
-            placeholder="https://script.google.com/macros/s/.../exec",
-        )
-        save_gas = st.button("Lưu URL Google Sheet", use_container_width=True)
-        generate = st.button("Tạo bài tập", type="primary", use_container_width=True)
+    if "generated_count" not in st.session_state:
+        st.session_state.generated_count = 0
 
-    if save_gas:
-        remember_gas_url(gas_url)
-        st.toast("Đã lưu Google Apps Script URL cho trang này.")
-    if generate or "teacher_payload" not in st.session_state:
-        if generate:
-            remember_gas_url(gas_url)
-        st.session_state.teacher_payload = assignment_payload(topic, qtype, count, title, teacher, gas_url, seed)
+    tab_setup, tab_preview, tab_stats = st.tabs(["Thiết lập & chia sẻ", "Xem trước đề", "Thống kê"])
+
+    with tab_setup:
+        with st.form("teacher_settings_form"):
+            left, right = st.columns([1.1, 0.9], gap="large")
+            with left:
+                st.subheader("Thông tin đề")
+                title = st.text_input("Tên bài tập", "Luyện tập Chương 6 - Toán 10")
+                teacher = st.text_input("Tên giáo viên", "")
+                lesson_keys = list(LESSONS)
+                lesson = st.selectbox("Chọn bài", lesson_keys, format_func=lambda k: LESSONS[k]["label"])
+                topic_options = LESSONS[lesson]["topics"]
+                topic = st.selectbox("Dạng cụ thể", topic_options, format_func=lambda k: TOPICS[k])
+            with right:
+                st.subheader("Cấu hình sinh đề")
+                qtype = st.radio("Loại câu hỏi", list(QUESTION_TYPES), format_func=lambda k: QUESTION_TYPES[k])
+                count = st.slider("Số câu", min_value=3, max_value=30, value=10)
+                seed = st.number_input("Mã đề/seed", min_value=1, max_value=999999, value=12345, step=1)
+                gas_url = st.text_input(
+                    "Google Apps Script Web App URL",
+                    value=default_gas_url(),
+                    placeholder="https://script.google.com/macros/s/.../exec",
+                )
+            generate = st.form_submit_button("Tạo / cập nhật bài tập", type="primary", use_container_width=True)
+
+        if generate or "teacher_payload" not in st.session_state:
+            if generate:
+                remember_gas_url(gas_url)
+                st.session_state.generated_count += 1
+                st.toast("Đã tạo bài tập và lưu URL Google Sheet cho trang này.")
+            st.session_state.teacher_payload = assignment_payload(topic, qtype, count, title, teacher, gas_url, seed)
+
+        payload = st.session_state.teacher_payload
+        questions = generate_questions(payload["topic"], payload["qtype"], payload["count"], payload["seed"])
+        token = encode_payload(payload)
+        student_link = app_url_with_payload(token)
+        lesson_label = lesson_label_for_topic(payload["topic"])
+
+        st.markdown(
+            f"""
+            <div class="quiz-meta-grid">
+                <div class="quiz-meta-item"><span>Bài học</span><strong>{lesson_label or "Chương 6"}</strong></div>
+                <div class="quiz-meta-item"><span>Dạng cụ thể</span><strong>{TOPICS[payload['topic']]}</strong></div>
+                <div class="quiz-meta-item"><span>Số câu</span><strong>{payload['count']}</strong></div>
+                <div class="quiz-meta-item"><span>Mã đề</span><strong>{payload['seed']}</strong></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        share_col, status_col = st.columns([1.35, 0.65], gap="large")
+        with share_col:
+            st.markdown('<div class="color-card">', unsafe_allow_html=True)
+            st.subheader("Link giao bài")
+            st.markdown('<div class="teacher-link">', unsafe_allow_html=True)
+            st.text_input("Link học sinh", student_link)
+            st.markdown("</div>", unsafe_allow_html=True)
+            json_data = json.dumps(
+                {"assignment": payload, "questions": questions_to_dicts(questions)},
+                ensure_ascii=False,
+                indent=2,
+            )
+            docx_data = None
+            docx_error = ""
+            try:
+                docx_data = build_docx_bytes(payload, questions)
+            except ModuleNotFoundError:
+                docx_error = "Chưa cài thư viện python-docx. Khi deploy, Streamlit sẽ cài theo requirements.txt."
+            d1, d2 = st.columns(2)
+            with d1:
+                st.download_button(
+                    "Tải JSON",
+                    data=json_data,
+                    file_name=f"bai-tap-chuong-6-{payload['assignment_id']}.json",
+                    mime="application/json",
+                    use_container_width=True,
+                )
+            with d2:
+                if docx_data:
+                    st.download_button(
+                        "Tải đề Word (.docx)",
+                        data=docx_data,
+                        file_name=f"de-chuong-6-{payload['assignment_id']}.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        use_container_width=True,
+                    )
+                else:
+                    st.warning(docx_error or "Chưa tạo được file Word.")
+            st.markdown("</div>", unsafe_allow_html=True)
+        with status_col:
+            with st.expander("Hướng dẫn & trạng thái", expanded=True):
+                if payload["gas_url"]:
+                    st.success("Đã có Google Apps Script URL.")
+                else:
+                    st.warning("Chưa có Google Apps Script URL.")
+                st.info("Khi deploy trên Streamlit Community Cloud, link giao bài sẽ là link thật của app.")
+            google_sheet_help()
 
     payload = st.session_state.teacher_payload
     questions = generate_questions(payload["topic"], payload["qtype"], payload["count"], payload["seed"])
-    token = encode_payload(payload)
-    student_link = app_url_with_payload(token)
 
-    col1, col2 = st.columns([1.3, 0.7], gap="large")
-    with col1:
-        st.markdown('<div class="color-card">', unsafe_allow_html=True)
-        st.subheader(payload["title"])
-        lesson_label = lesson_label_for_topic(payload["topic"])
-        if lesson_label:
-            st.write(f"**Bài học:** {lesson_label}")
-        st.write(f"**Dạng cụ thể:** {TOPICS[payload['topic']]}")
-        st.write(f"**Loại câu hỏi:** {QUESTION_TYPES[payload['qtype']]}")
-        st.write(f"**Số câu:** {payload['count']} | **Mã đề:** {payload['seed']} | **Mã bài:** {payload['assignment_id']}")
-        st.markdown('<div class="teacher-link">', unsafe_allow_html=True)
-        st.text_input("Link giao cho học sinh", student_link)
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.download_button(
-            "Tải dữ liệu câu hỏi JSON",
-            data=json.dumps({"assignment": payload, "questions": questions_to_dicts(questions)}, ensure_ascii=False, indent=2),
-            file_name=f"bai-tap-chuong-6-{payload['assignment_id']}.json",
-            mime="application/json",
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-    with col2:
-        st.markdown('<div class="color-card">', unsafe_allow_html=True)
-        st.info("Sau khi deploy lên Streamlit Community Cloud, link giao bài là link thật để học sinh mở trên điện thoại.")
-        if payload["gas_url"]:
-            st.success("Đã có Google Apps Script URL. Kết quả học sinh sẽ được gửi về Google Sheet.")
-        else:
-            st.warning("Chưa có Google Apps Script URL. Học sinh vẫn làm được nhưng kết quả chưa gửi về Google Sheet.")
-        google_sheet_help()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    st.divider()
-    st.subheader("Xem trước đề")
-    for i, q in enumerate(questions, 1):
-        with st.container(border=True):
-            st.markdown('<div class="question-preview">', unsafe_allow_html=True)
+    with tab_preview:
+        st.subheader("Xem trước đề")
+        for i, q in enumerate(questions, 1):
+            st.markdown('<div class="question-card">', unsafe_allow_html=True)
             st.markdown(f"**Câu {i}.** {q.prompt}")
             if q.qtype == "mcq":
                 for label, option in zip(["A", "B", "C", "D"], q.options):
@@ -449,6 +620,14 @@ def teacher_page() -> None:
                 st.markdown(f"**Đáp án:** {q.answer}")
                 st.markdown(q.explanation)
             st.markdown("</div>", unsafe_allow_html=True)
+
+    with tab_stats:
+        st.subheader("Thống kê sử dụng")
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Lượt sinh đề trong phiên", st.session_state.generated_count)
+        m2.metric("Số câu của đề hiện tại", payload["count"])
+        m3.metric("Mã bài hiện tại", payload["assignment_id"])
+        st.info("Phổ điểm và tỷ lệ đúng/sai từng câu có thể bổ sung ở bước sau khi có cơ chế đọc dữ liệu ngược từ Google Sheet hoặc file CSV xuất từ Sheet.")
 
 
 def student_page(payload: dict) -> None:

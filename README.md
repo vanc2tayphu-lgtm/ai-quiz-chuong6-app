@@ -16,6 +16,8 @@
 - Sinh tự động câu hỏi, đáp án và hướng dẫn ngắn.
 - Tạo link bài tập để học sinh làm online.
 - Gửi kết quả về Google Sheet thông qua Google Apps Script.
+- Giao diện giáo viên dùng các tab `Thiết lập & chia sẻ`, `Xem trước đề`, `Thống kê`.
+- Tải đề dưới dạng JSON hoặc file Word `.docx` gồm phần đề và đáp án/hướng dẫn.
 
 ## Chạy trên máy
 
