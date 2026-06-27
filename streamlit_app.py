@@ -43,6 +43,23 @@ def apply_mobile_css() -> None:
             border-color: #2563eb;
             background: #f8fbff;
         }
+        .tf-row {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 0.75rem;
+            margin: 0.55rem 0;
+            background: #ffffff;
+        }
+        .short-answer-note {
+            color: #4b5563;
+            font-size: 0.92rem;
+            margin-bottom: 0.35rem;
+        }
+        .short-answer-row input {
+            text-align: center;
+            font-size: 1.15rem !important;
+            font-weight: 700;
+        }
         .student-meta {
             color: #4b5563;
             font-size: 0.95rem;
@@ -128,6 +145,41 @@ def default_gas_url() -> str:
 
 def render_question(i: int, q: dict, key_prefix: str, allow_empty: bool = False):
     st.markdown(f"**Câu {i}.** {q['prompt']}")
+    if q["qtype"] == "true_false":
+        answers: dict[str, str | None] = {}
+        for statement in q.get("statements") or []:
+            st.markdown('<div class="tf-row">', unsafe_allow_html=True)
+            st.markdown(f"**{statement['label']})** {statement['text']}")
+            answers[statement["id"]] = st.radio(
+                f"Chọn đúng/sai cho ý {statement['label']}",
+                ["Đúng", "Sai"],
+                key=f"{key_prefix}_{statement['id']}",
+                horizontal=True,
+                index=None if allow_empty else 0,
+                label_visibility="collapsed",
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+        return answers
+    if q["qtype"] == "short_answer":
+        st.markdown(
+            '<div class="short-answer-note">Nhập đáp án bằng dấu phẩy thập phân. Nếu đáp án âm, chọn dấu “-”, rồi nhập 4 ký tự vào 4 ô.</div>',
+            unsafe_allow_html=True,
+        )
+        sign_col, c1, c2, c3, c4 = st.columns([0.8, 1, 1, 1, 1])
+        with sign_col:
+            sign = st.selectbox("Dấu", ["", "-"], key=f"{key_prefix}_{q['id']}_sign", label_visibility="collapsed")
+        chars = []
+        for idx, col in enumerate([c1, c2, c3, c4], start=1):
+            with col:
+                value = st.text_input(
+                    f"Ký tự {idx}",
+                    key=f"{key_prefix}_{q['id']}_char_{idx}",
+                    max_chars=1,
+                    label_visibility="collapsed",
+                    placeholder="",
+                )
+                chars.append(value)
+        return sign + "".join(chars)
     return st.radio(
         "Chọn đáp án",
         q["options"],
@@ -148,6 +200,80 @@ def submit_to_google_script(gas_url: str, payload: dict) -> tuple[bool, str]:
         return False, f"HTTP {response.status_code}: {response.text[:300]}"
     except Exception as exc:
         return False, str(exc)
+
+
+def normalize_short_answer(value: str | None) -> str:
+    if value is None:
+        return ""
+    normalized = str(value).strip().replace(" ", "").replace(".", ",")
+    if normalized.startswith("+"):
+        normalized = normalized[1:]
+    return normalized
+
+
+def answer_is_missing(q: dict, selected) -> bool:
+    if q["qtype"] == "true_false":
+        return any(value is None for value in (selected or {}).values())
+    if q["qtype"] == "short_answer":
+        return normalize_short_answer(selected).replace("-", "") == ""
+    return selected is None
+
+
+def score_answer(index: int, q: dict, selected) -> tuple[int, int, list[dict]]:
+    if q["qtype"] == "true_false":
+        score = 0
+        details = []
+        selected_map = selected or {}
+        for statement in q.get("statements") or []:
+            chosen = selected_map.get(statement["id"])
+            ok = chosen == statement["answer"]
+            score += int(ok)
+            details.append(
+                {
+                    "index": f"{index}{statement['label']}",
+                    "question": f"{q['prompt']} | {statement['label']}) {statement['text']}",
+                    "selected": chosen,
+                    "correct_answer": statement["answer"],
+                    "is_correct": ok,
+                    "explanation": statement["explanation"],
+                }
+            )
+        return score, len(q.get("statements") or []), details
+
+    if q["qtype"] == "short_answer":
+        chosen = normalize_short_answer(selected)
+        correct = normalize_short_answer(q["answer"])
+        ok = chosen == correct
+        return (
+            int(ok),
+            1,
+            [
+                {
+                    "index": index,
+                    "question": q["prompt"],
+                    "selected": chosen,
+                    "correct_answer": correct,
+                    "is_correct": ok,
+                    "explanation": q["explanation"],
+                }
+            ],
+        )
+
+    ok = selected == q["answer"]
+    return (
+        int(ok),
+        1,
+        [
+            {
+                "index": index,
+                "question": q["prompt"],
+                "selected": selected,
+                "correct_answer": q["answer"],
+                "is_correct": ok,
+                "explanation": q["explanation"],
+            }
+        ],
+    )
 
 
 def google_sheet_help() -> None:
@@ -228,8 +354,12 @@ def teacher_page() -> None:
             if q.qtype == "mcq":
                 for label, option in zip(["A", "B", "C", "D"], q.options):
                     st.markdown(f"{label}. {option}")
-            else:
+            elif q.qtype == "true_false":
+                for statement in q.statements or []:
+                    st.markdown(f"**{statement['label']})** {statement['text']}")
                 st.markdown("A. Đúng&nbsp;&nbsp;&nbsp;&nbsp;B. Sai")
+            else:
+                st.markdown("Học sinh nhập đáp số vào 4 ô ký tự, dùng dấu phẩy thập phân nếu có.")
             with st.expander("Đáp án và hướng dẫn"):
                 st.markdown(f"**Đáp án:** {q.answer}")
                 st.markdown(q.explanation)
@@ -270,27 +400,20 @@ def student_page(payload: dict) -> None:
         if not student_name.strip() or not student_class.strip():
             st.error("Em cần nhập đầy đủ họ tên và lớp trước khi nộp bài.")
             st.stop()
-        unanswered = [i for i, q in enumerate(questions, 1) if answers.get(q["id"]) is None]
+        unanswered = [i for i, q in enumerate(questions, 1) if answer_is_missing(q, answers.get(q["id"]))]
         if unanswered:
-            st.error("Em chưa chọn đáp án cho câu: " + ", ".join(map(str, unanswered)))
+            st.error("Em chưa hoàn thành câu: " + ", ".join(map(str, unanswered)))
             st.stop()
 
         score = 0
+        total_units = 0
         details = []
         for i, q in enumerate(questions, 1):
             selected = answers.get(q["id"])
-            ok = selected == q["answer"]
-            score += int(ok)
-            details.append(
-                {
-                    "index": i,
-                    "question": q["prompt"],
-                    "selected": selected,
-                    "correct_answer": q["answer"],
-                    "is_correct": ok,
-                    "explanation": q["explanation"],
-                }
-            )
+            item_score, item_total, item_details = score_answer(i, q, selected)
+            score += item_score
+            total_units += item_total
+            details.extend(item_details)
 
         result = {
             "submitted_at": datetime.now().isoformat(timespec="seconds"),
@@ -303,12 +426,12 @@ def student_page(payload: dict) -> None:
             "student_name": student_name.strip(),
             "student_class": student_class.strip(),
             "score": score,
-            "total": len(questions),
-            "percent": round(score * 100 / len(questions), 2),
+            "total": total_units,
+            "percent": round(score * 100 / total_units, 2),
             "details": details,
         }
 
-        st.success(f"Em đạt {score}/{len(questions)} câu đúng ({result['percent']}%).")
+        st.success(f"Em đạt {score}/{total_units} ý đúng ({result['percent']}%).")
         ok, message = submit_to_google_script(payload.get("gas_url", ""), result)
         if ok:
             st.success("Đã gửi kết quả về Google Sheet.")

@@ -12,7 +12,8 @@
   - Bài 18: Phương trình quy về phương trình bậc hai
 - Chọn số câu và loại câu hỏi:
   - Trắc nghiệm 4 lựa chọn
-  - Đúng/Sai
+  - Đúng/Sai 4 ý a), b), c), d)
+  - Trả lời ngắn
 - Sinh tự động câu hỏi, đáp án và hướng dẫn ngắn.
 - Tạo link bài tập để học sinh làm online.
 - Gửi kết quả về Google Sheet thông qua Google Apps Script.
@@ -59,6 +60,8 @@ Trang làm bài của học sinh được thiết kế mobile-first:
 
 - Học sinh nhập họ tên và lớp ngay trên trang, không cần mở sidebar.
 - Đáp án là các nút lớn, xếp dọc để dễ bấm trên điện thoại.
+- Câu đúng/sai hiển thị theo từng ý a), b), c), d), học sinh chọn Đúng hoặc Sai cho từng ý.
+- Câu trả lời ngắn dùng 4 ô ký tự; học sinh nhập dấu phẩy thập phân, ví dụ `15,5`, `3,67`, `-1,25`.
 - Học sinh phải chọn đủ đáp án mới nộp được bài hợp lệ.
 - Sau khi nộp, app hiển thị điểm và gửi kết quả về Google Sheet nếu đã cấu hình Apps Script URL.
 

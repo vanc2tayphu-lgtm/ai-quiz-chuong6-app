@@ -22,7 +22,8 @@ TOPICS = {
 
 QUESTION_TYPES = {
     "mcq": "Trắc nghiệm 4 lựa chọn",
-    "true_false": "Đúng/Sai",
+    "true_false": "Đúng/Sai 4 ý",
+    "short_answer": "Trả lời ngắn",
 }
 
 
@@ -35,6 +36,7 @@ class Question:
     options: list[str]
     answer: str
     explanation: str
+    statements: list[dict] | None = None
 
 
 def frac_text(value: Fraction | int) -> str:
@@ -288,6 +290,179 @@ def gen_reducible_equation_question(rng: random.Random, qtype: str) -> Question:
     )
 
 
+def make_statement(label: str, text: str, answer: bool, explanation: str) -> dict:
+    return {
+        "label": label,
+        "text": text,
+        "answer": "Đúng" if answer else "Sai",
+        "explanation": explanation,
+    }
+
+
+def make_true_false_group(topic: str, prompt: str, statements: list[dict]) -> Question:
+    answer = "; ".join(f"{item['label']}) {item['answer']}" for item in statements)
+    return Question(
+        id=str(uuid.uuid4()),
+        topic=topic,
+        qtype="true_false",
+        prompt=prompt,
+        options=["Đúng", "Sai"],
+        answer=answer,
+        explanation="Chọn Đúng hoặc Sai cho từng ý a), b), c), d).",
+        statements=statements,
+    )
+
+
+def decimal_comma(value: int | float | Fraction) -> str:
+    if isinstance(value, Fraction):
+        if value.denominator == 1:
+            return str(value.numerator)
+        raw = f"{value.numerator / value.denominator:.2f}"
+    elif isinstance(value, float):
+        raw = f"{value:.2f}"
+    else:
+        return str(value)
+    raw = raw.rstrip("0").rstrip(".")
+    return raw.replace(".", ",")
+
+
+def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
+    if topic == "ham_so_gia_tri":
+        a = rng.choice([1, 2, -1, -2])
+        b = rng.randint(-4, 4)
+        c = rng.randint(-5, 5)
+        x0 = rng.randint(-3, 3)
+        x1 = rng.randint(-3, 3)
+        y0 = a * x0 * x0 + b * x0 + c
+        y1 = a * x1 * x1 + b * x1 + c
+        wrong = y0 + rng.choice([-3, -2, -1, 1, 2, 3])
+        prompt = f"Cho hàm số $f(x)={poly_text(a, b, c)}$. Xét tính đúng sai của các mệnh đề sau:"
+        statements = [
+            make_statement("a", f"$f({x0})={y0}$.", True, f"Thay $x={x0}$ vào hàm số được {y0}."),
+            make_statement("b", f"Điểm $M({x1}; {y1})$ thuộc đồ thị hàm số.", True, f"Vì $f({x1})={y1}$ nên điểm đã cho thuộc đồ thị."),
+            make_statement("c", f"$f({x0})={wrong}$.", False, f"Giá trị đúng là $f({x0})={y0}$."),
+            make_statement("d", f"Đồ thị hàm số cắt trục $Oy$ tại điểm $(0; {c})$.", True, "Khi x=0 thì y=c."),
+        ]
+        return make_true_false_group(topic, prompt, statements)
+
+    if topic == "ham_so_bac_hai_dinh":
+        a = rng.choice([1, 2, -1, -2])
+        h = rng.randint(-4, 4)
+        k = rng.randint(-5, 5)
+        b = -2 * a * h
+        c = a * h * h + k
+        prompt = f"Cho parabol $(P): y={poly_text(a, b, c)}$. Xét tính đúng sai của các mệnh đề sau:"
+        statements = [
+            make_statement("a", f"Trục đối xứng của $(P)$ là đường thẳng $x={h}$.", True, "Trục đối xứng có phương trình $x=-\\frac{b}{2a}$."),
+            make_statement("b", f"Tọa độ đỉnh của $(P)$ là $I({h}; {k})$.", True, "Thay hoành độ đỉnh vào hàm số được tung độ đỉnh."),
+            make_statement("c", f"Parabol quay bề lõm lên trên.", a > 0, "Parabol quay bề lõm lên trên khi $a>0$."),
+            make_statement("d", f"Tọa độ đỉnh của $(P)$ là $I({-h}; {k})$.", False, f"Hoành độ đỉnh đúng là {h}."),
+        ]
+        return make_true_false_group(topic, prompt, statements)
+
+    if topic == "ham_so_bac_hai_giao_diem":
+        r1 = rng.randint(-4, 1)
+        r2 = rng.randint(r1 + 1, 5)
+        a = rng.choice([1, -1, 2, -2])
+        b = -a * (r1 + r2)
+        c = a * r1 * r2
+        prompt = f"Cho parabol $(P): y={poly_text(a, b, c)}$. Xét tính đúng sai của các mệnh đề sau:"
+        statements = [
+            make_statement("a", f"$(P)$ cắt trục $Ox$ tại $({r1};0)$ và $({r2};0)$.", True, "Giao điểm với Ox là nghiệm của phương trình y=0."),
+            make_statement("b", f"$(P)$ cắt trục $Oy$ tại $(0;{c})$.", True, "Cho x=0 thì y=c."),
+            make_statement("c", f"Tổng hoành độ hai giao điểm với $Ox$ bằng {r1 + r2}.", True, "Hai hoành độ là hai nghiệm r1 và r2."),
+            make_statement("d", "$(P)$ không cắt trục $Ox$.", False, "Phương trình y=0 có hai nghiệm phân biệt."),
+        ]
+        return make_true_false_group(topic, prompt, statements)
+
+    if topic in {"dau_tam_thuc", "bpt_bac_hai"}:
+        r1 = rng.randint(-4, 1)
+        r2 = rng.randint(r1 + 1, 5)
+        a = rng.choice([1, -1, 2, -2])
+        b = -a * (r1 + r2)
+        c = a * r1 * r2
+        pos, neg = sign_answer(a, r1, r2)
+        prompt = f"Cho tam thức $f(x)={poly_text(a, b, c)}$. Xét tính đúng sai của các mệnh đề sau:"
+        statements = [
+            make_statement("a", f"Tam thức có hai nghiệm là $x={r1}$ và $x={r2}$.", True, "Tam thức được tạo từ hai nghiệm này."),
+            make_statement("b", f"$f(x)>0$ trên {pos}.", True, "Dựa vào dấu của hệ số a và hai nghiệm."),
+            make_statement("c", f"$f(x)<0$ trên {neg}.", True, "Khoảng còn lại trái dấu với hệ số a."),
+            make_statement("d", f"Tam thức luôn cùng dấu với hệ số $a$ với mọi $x$.", False, "Khi có hai nghiệm phân biệt, tam thức đổi dấu qua các nghiệm."),
+        ]
+        return make_true_false_group(topic, prompt, statements)
+
+    u1 = rng.choice([1, 4])
+    u2 = rng.choice([9, 16])
+    b = -(u1 + u2)
+    c = u1 * u2
+    roots = sorted({-int(u1**0.5), int(u1**0.5), -int(u2**0.5), int(u2**0.5)})
+    prompt = f"Cho phương trình $x^4 {b:+d}x^2 {c:+d}=0$. Xét tính đúng sai của các mệnh đề sau:"
+    statements = [
+        make_statement("a", "Có thể đặt $t=x^2$ để đưa phương trình về bậc hai.", True, "Đây là phương trình trùng phương."),
+        make_statement("b", f"Phương trình theo $t$ có hai nghiệm $t={u1}$ và $t={u2}$.", True, "Thay t=x^2 vào phương trình."),
+        make_statement("c", f"Phương trình ban đầu có {len(roots)} nghiệm thực.", True, "Mỗi nghiệm dương của t cho hai nghiệm x đối nhau."),
+        make_statement("d", "Phương trình ban đầu vô nghiệm.", False, "Vì t có nghiệm dương nên phương trình có nghiệm thực."),
+    ]
+    return make_true_false_group(topic, prompt, statements)
+
+
+def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
+    if topic == "ham_so_gia_tri":
+        a = rng.choice([1, 2, -1, -2, 3])
+        b = rng.randint(-5, 5)
+        c = rng.randint(-6, 6)
+        x0 = rng.randint(-4, 4)
+        value = a * x0 * x0 + b * x0 + c
+        prompt = f"Cho hàm số $f(x)={poly_text(a, b, c)}$. Tính $f({x0})$."
+        answer = decimal_comma(value)
+        explanation = f"Thay $x={x0}$ vào hàm số, ta được $f({x0})={answer}$."
+    elif topic == "ham_so_bac_hai_dinh":
+        a = rng.choice([1, 2, -1, -2])
+        h = rng.randint(-4, 4)
+        k = rng.randint(-5, 5)
+        b = -2 * a * h
+        c = a * h * h + k
+        ask_x = rng.choice([True, False])
+        prompt = f"Cho parabol $y={poly_text(a, b, c)}$. {'Tính hoành độ' if ask_x else 'Tính tung độ'} đỉnh của parabol."
+        answer = decimal_comma(h if ask_x else k)
+        explanation = f"Đỉnh là $I({h}; {k})$."
+    elif topic == "ham_so_bac_hai_giao_diem":
+        r1 = rng.randint(-4, 1)
+        r2 = rng.randint(r1 + 1, 6)
+        a = rng.choice([1, -1, 2, -2])
+        b = -a * (r1 + r2)
+        c = a * r1 * r2
+        prompt = f"Parabol $y={poly_text(a, b, c)}$ cắt trục $Ox$ tại hai điểm có hoành độ $x_1, x_2$. Tính $x_1+x_2$."
+        answer = decimal_comma(r1 + r2)
+        explanation = f"Hai nghiệm là {r1} và {r2}, nên tổng bằng {r1 + r2}."
+    elif topic in {"dau_tam_thuc", "bpt_bac_hai"}:
+        r1 = rng.randint(-4, 1)
+        r2 = rng.randint(r1 + 1, 6)
+        a = rng.choice([1, -1, 2, -2])
+        b = -a * (r1 + r2)
+        c = a * r1 * r2
+        prompt = f"Tam thức $f(x)={poly_text(a, b, c)}$ có hai nghiệm $x_1<x_2$. Tính $x_2-x_1$."
+        answer = decimal_comma(r2 - r1)
+        explanation = f"Hai nghiệm là {r1} và {r2}, nên $x_2-x_1={r2-r1}$."
+    else:
+        u1 = rng.choice([1, 4])
+        u2 = rng.choice([9, 16])
+        b = -(u1 + u2)
+        c = u1 * u2
+        prompt = f"Phương trình $x^4 {b:+d}x^2 {c:+d}=0$ có bao nhiêu nghiệm thực?"
+        answer = "4"
+        explanation = f"Đặt $t=x^2$, được $t={u1}$ hoặc $t={u2}$; mỗi giá trị dương của t cho hai nghiệm x."
+    return Question(
+        id=str(uuid.uuid4()),
+        topic=topic,
+        qtype="short_answer",
+        prompt=prompt,
+        options=[],
+        answer=answer,
+        explanation=explanation,
+    )
+
+
 GENERATORS: dict[str, Callable[[random.Random, str], Question]] = {
     "ham_so_gia_tri": gen_value_question,
     "ham_so_bac_hai_dinh": gen_vertex_question,
@@ -304,10 +479,18 @@ def generate_questions(topic: str, qtype: str, count: int, seed: int | None = No
     if qtype not in QUESTION_TYPES:
         raise ValueError(f"Unknown question type: {qtype}")
     rng = random.Random(seed)
-    questions = [GENERATORS[topic](rng, qtype) for _ in range(count)]
+    if qtype == "true_false":
+        questions = [gen_true_false_group_question(rng, topic) for _ in range(count)]
+    elif qtype == "short_answer":
+        questions = [gen_short_answer_question(rng, topic) for _ in range(count)]
+    else:
+        questions = [GENERATORS[topic](rng, qtype) for _ in range(count)]
     stable_seed = seed if seed is not None else "random"
     for index, question in enumerate(questions, start=1):
         question.id = f"{topic}-{qtype}-{stable_seed}-{index}"
+        if question.statements:
+            for statement in question.statements:
+                statement["id"] = f"{question.id}-{statement['label']}"
     return questions
 
 
