@@ -1,61 +1,29 @@
 /**
- * Google Apps Script nhận kết quả từ Streamlit app và ghi vào Google Sheet.
+ * Google Apps Script nhận kết quả từ Streamlit app và ghi gọn vào Google Sheet.
  *
  * Cách triển khai:
- * 1. Tạo Google Sheet mới, đặt tên ví dụ: Ket qua AI Quiz Chuong 6.
+ * 1. Tạo Google Sheet mới.
  * 2. Vào Extensions -> Apps Script.
  * 3. Dán toàn bộ mã này, bấm Save.
- * 4. Bấm Deploy -> New deployment -> Web app.
+ * 4. Deploy -> New deployment -> Web app.
  * 5. Execute as: Me.
  * 6. Who has access: Anyone.
- * 7. Bấm Deploy, cấp quyền, copy Web app URL.
- * 8. Dán Web app URL vào ô Google Apps Script Web App URL trong app Streamlit.
+ * 7. Deploy, cấp quyền, copy Web app URL.
+ * 8. Dán Web app URL vào app Streamlit.
  *
- * Script sẽ tự tạo 2 sheet:
- * - KetQua: mỗi lượt nộp bài là một dòng tổng hợp.
- * - ChiTiet: mỗi câu trả lời là một dòng để giáo viên phân tích lỗi sai.
+ * Sheet chỉ có các cột:
+ * Thứ tự | Họ tên học sinh | Lớp | Ngày làm bài | Kết quả | Kết quả từng câu
  */
 
-const SUMMARY_SHEET = "KetQua";
-const DETAIL_SHEET = "ChiTiet";
-
-const SUMMARY_HEADERS = [
-  "submitted_at",
-  "assignment_id",
-  "assignment_title",
-  "teacher",
-  "topic",
-  "question_type",
-  "seed",
-  "student_name",
-  "student_class",
-  "score",
-  "total",
-  "percent"
+const RESULT_SHEET = "KetQua";
+const RESULT_HEADERS = [
+  "Thứ tự",
+  "Họ tên học sinh",
+  "Lớp",
+  "Ngày làm bài",
+  "Kết quả",
+  "Kết quả từng câu"
 ];
-
-const DETAIL_HEADERS = [
-  "submitted_at",
-  "assignment_id",
-  "student_name",
-  "student_class",
-  "question_index",
-  "question",
-  "selected",
-  "correct_answer",
-  "is_correct",
-  "explanation"
-];
-
-function getOrCreateSheet_(spreadsheet, name, headers) {
-  const sheet = spreadsheet.getSheetByName(name) || spreadsheet.insertSheet(name);
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(headers);
-    sheet.setFrozenRows(1);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#e8f0fe");
-  }
-  return sheet;
-}
 
 function jsonOutput_(payload) {
   return ContentService
@@ -63,62 +31,69 @@ function jsonOutput_(payload) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function setupSheets() {
+function getResultSheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  getOrCreateSheet_(ss, SUMMARY_SHEET, SUMMARY_HEADERS);
-  getOrCreateSheet_(ss, DETAIL_SHEET, DETAIL_HEADERS);
-  return jsonOutput_({ ok: true, message: "Sheets are ready." });
+  const sheet = ss.getSheetByName(RESULT_SHEET) || ss.insertSheet(RESULT_SHEET);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(RESULT_HEADERS);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, RESULT_HEADERS.length)
+      .setFontWeight("bold")
+      .setBackground("#e8f0fe");
+    sheet.setColumnWidths(1, RESULT_HEADERS.length, 150);
+    sheet.setColumnWidth(2, 220);
+    sheet.setColumnWidth(6, 460);
+  }
+
+  return sheet;
+}
+
+function formatDate_(value) {
+  const date = value ? new Date(value) : new Date();
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm:ss");
+}
+
+function formatQuestionResults_(details) {
+  if (!Array.isArray(details) || details.length === 0) {
+    return "";
+  }
+
+  return details.map(function(item) {
+    const index = item.index || "";
+    const isCorrect = item.is_correct === true;
+    return index + ": " + (isCorrect ? "Đúng" : "Sai");
+  }).join("; ");
+}
+
+function setupSheets() {
+  getResultSheet_();
+  return jsonOutput_({ ok: true, message: "Sheet KetQua is ready." });
 }
 
 function doPost(e) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const summarySheet = getOrCreateSheet_(ss, SUMMARY_SHEET, SUMMARY_HEADERS);
-    const detailSheet = getOrCreateSheet_(ss, DETAIL_SHEET, DETAIL_HEADERS);
+    const sheet = getResultSheet_();
     const data = JSON.parse(e.postData.contents || "{}");
-    const submittedAt = data.submitted_at || new Date().toISOString();
-    const details = Array.isArray(data.details) ? data.details : [];
+    const nextIndex = Math.max(sheet.getLastRow(), 1);
+    const score = Number(data.score || 0);
+    const total = Number(data.total || 0);
+    const percent = Number(data.percent || 0);
+    const resultText = score + "/" + total + " (" + percent + "%)";
 
-    summarySheet.appendRow([
-      submittedAt,
-      data.assignment_id || "",
-      data.assignment_title || "",
-      data.teacher || "",
-      data.topic || "",
-      data.question_type || "",
-      data.seed || "",
+    sheet.appendRow([
+      nextIndex,
       data.student_name || "",
       data.student_class || "",
-      Number(data.score || 0),
-      Number(data.total || 0),
-      Number(data.percent || 0)
+      formatDate_(data.submitted_at),
+      resultText,
+      formatQuestionResults_(data.details)
     ]);
-
-    if (details.length > 0) {
-      const detailRows = details.map(function(item) {
-        return [
-          submittedAt,
-          data.assignment_id || "",
-          data.student_name || "",
-          data.student_class || "",
-          item.index || "",
-          item.question || "",
-          item.selected || "",
-          item.correct_answer || "",
-          item.is_correct === true,
-          item.explanation || ""
-        ];
-      });
-      detailSheet
-        .getRange(detailSheet.getLastRow() + 1, 1, detailRows.length, DETAIL_HEADERS.length)
-        .setValues(detailRows);
-    }
 
     return jsonOutput_({
       ok: true,
       message: "Saved",
-      summary_rows: summarySheet.getLastRow() - 1,
-      detail_rows: detailSheet.getLastRow() - 1
+      rows: sheet.getLastRow() - 1
     });
   } catch (err) {
     return jsonOutput_({
@@ -131,6 +106,6 @@ function doPost(e) {
 function doGet() {
   setupSheets();
   return ContentService
-    .createTextOutput("AI Quiz Chuong 6 receiver is running. Sheets KetQua and ChiTiet are ready.")
+    .createTextOutput("AI Quiz receiver is running. Sheet KetQua is ready.")
     .setMimeType(ContentService.MimeType.TEXT);
 }

@@ -345,8 +345,8 @@ def google_sheet_help() -> None:
             5. Chọn **Execute as: Me** và **Who has access: Anyone**.
             6. Copy **Web app URL** rồi dán vào ô cấu hình trong app.
 
-            Sau khi học sinh nộp bài, script sẽ tự tạo 2 sheet:
-            `KetQua` để xem điểm tổng hợp và `ChiTiet` để xem từng câu học sinh chọn.
+            Sau khi học sinh nộp bài, script sẽ ghi vào sheet `KetQua` với các cột:
+            `Thứ tự`, `Họ tên học sinh`, `Lớp`, `Ngày làm bài`, `Kết quả`, `Kết quả từng câu`.
             """
         )
 

@@ -49,10 +49,17 @@ Thiết lập nhanh:
 7. Copy `Web app URL`.
 8. Dán URL này vào ô `Google Apps Script Web App URL` trong app Streamlit.
 
-Khi học sinh nộp bài, Google Sheet sẽ tự có 2 trang:
+Khi học sinh nộp bài, Google Sheet sẽ có sheet `KetQua` với 6 cột:
 
-- `KetQua`: điểm tổng hợp mỗi lượt nộp.
-- `ChiTiet`: từng câu hỏi, đáp án học sinh chọn, đáp án đúng và trạng thái đúng/sai.
+- `Thứ tự`
+- `Họ tên học sinh`
+- `Lớp`
+- `Ngày làm bài`
+- `Kết quả`
+- `Kết quả từng câu`
+
+Cột `Kết quả từng câu` chỉ ghi đúng/sai theo từng câu hoặc từng ý, ví dụ:
+`1: Đúng; 2: Sai; 3a: Đúng; 3b: Sai`.
 
 ## Giao diện học sinh trên điện thoại
 
