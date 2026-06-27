@@ -24,9 +24,52 @@ def apply_mobile_css() -> None:
     st.markdown(
         """
         <style>
+        .stApp {
+            background:
+                radial-gradient(circle at 12% 8%, rgba(37, 99, 235, 0.12), transparent 28%),
+                radial-gradient(circle at 88% 14%, rgba(16, 185, 129, 0.12), transparent 26%),
+                linear-gradient(180deg, #f8fbff 0%, #ffffff 42%, #f7fbf9 100%);
+        }
         .block-container {
             max-width: 1120px;
             padding-top: 1.25rem;
+        }
+        .app-hero {
+            border: 1px solid rgba(37, 99, 235, 0.16);
+            border-radius: 18px;
+            padding: 1.15rem 1.25rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #ecfdf5 55%, #fff7ed 100%);
+            box-shadow: 0 12px 34px rgba(15, 23, 42, 0.07);
+        }
+        .app-hero h1 {
+            margin: 0 0 0.35rem 0;
+        }
+        .app-hero p {
+            color: #475569;
+            margin: 0;
+        }
+        .color-card {
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 16px;
+            padding: 1rem;
+            background: rgba(255,255,255,0.88);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.055);
+        }
+        .question-preview {
+            border-left: 6px solid #2563eb;
+            background: linear-gradient(90deg, #ffffff 0%, #f8fbff 100%);
+        }
+        div[data-testid="stSidebarContent"] {
+            background: linear-gradient(180deg, #eff6ff 0%, #f0fdf4 100%);
+        }
+        .stButton > button, .stDownloadButton > button {
+            border-radius: 12px;
+            font-weight: 700;
+        }
+        .stButton > button[kind="primary"] {
+            background: linear-gradient(90deg, #2563eb 0%, #059669 100%);
+            border: none;
         }
         .student-shell .stRadio [role="radiogroup"] {
             gap: 0.45rem;
@@ -48,7 +91,7 @@ def apply_mobile_css() -> None:
             border-radius: 10px;
             padding: 0.75rem;
             margin: 0.55rem 0;
-            background: #ffffff;
+            background: linear-gradient(90deg, #ffffff 0%, #f8fafc 100%);
         }
         .short-answer-note {
             color: #4b5563;
@@ -137,10 +180,25 @@ def app_url_with_payload(token: str) -> str:
 
 
 def default_gas_url() -> str:
+    params = get_query_params()
+    saved = params.get("gas", "")
+    if isinstance(saved, list):
+        saved = saved[0] if saved else ""
+    if saved:
+        return saved
     try:
         return st.secrets.get("GAS_WEB_APP_URL", "")
     except Exception:
         return ""
+
+
+def remember_gas_url(gas_url: str) -> None:
+    if not gas_url.strip():
+        return
+    try:
+        st.query_params["gas"] = gas_url.strip()
+    except Exception:
+        st.experimental_set_query_params(gas=gas_url.strip())
 
 
 def render_question(i: int, q: dict, key_prefix: str, allow_empty: bool = False):
@@ -294,10 +352,14 @@ def google_sheet_help() -> None:
 
 
 def teacher_page() -> None:
-    st.title("Tạo bài tập online Chương 6 - Toán 10")
-    st.caption(
-        "Giáo viên chọn dạng toán, số câu và loại câu hỏi; ứng dụng tạo link để học sinh làm bài "
-        "và gửi kết quả về Google Sheet thông qua Google Apps Script."
+    st.markdown(
+        """
+        <div class="app-hero">
+            <h1>Tạo bài tập online Chương 6 - Toán 10</h1>
+            <p>Chọn dạng toán, loại câu hỏi và số câu; app sinh đề, tạo link làm bài trên điện thoại và gửi kết quả về Google Sheet.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     with st.sidebar:
@@ -313,9 +375,15 @@ def teacher_page() -> None:
             value=default_gas_url(),
             placeholder="https://script.google.com/macros/s/.../exec",
         )
+        save_gas = st.button("Lưu URL Google Sheet", use_container_width=True)
         generate = st.button("Tạo bài tập", type="primary", use_container_width=True)
 
+    if save_gas:
+        remember_gas_url(gas_url)
+        st.toast("Đã lưu Google Apps Script URL cho trang này.")
     if generate or "teacher_payload" not in st.session_state:
+        if generate:
+            remember_gas_url(gas_url)
         st.session_state.teacher_payload = assignment_payload(topic, qtype, count, title, teacher, gas_url, seed)
 
     payload = st.session_state.teacher_payload
@@ -325,6 +393,7 @@ def teacher_page() -> None:
 
     col1, col2 = st.columns([1.3, 0.7], gap="large")
     with col1:
+        st.markdown('<div class="color-card">', unsafe_allow_html=True)
         st.subheader(payload["title"])
         st.write(f"**Dạng toán:** {TOPICS[payload['topic']]}")
         st.write(f"**Loại câu hỏi:** {QUESTION_TYPES[payload['qtype']]}")
@@ -338,18 +407,22 @@ def teacher_page() -> None:
             file_name=f"bai-tap-chuong-6-{payload['assignment_id']}.json",
             mime="application/json",
         )
+        st.markdown("</div>", unsafe_allow_html=True)
     with col2:
+        st.markdown('<div class="color-card">', unsafe_allow_html=True)
         st.info("Sau khi deploy lên Streamlit Community Cloud, link giao bài là link thật để học sinh mở trên điện thoại.")
         if payload["gas_url"]:
             st.success("Đã có Google Apps Script URL. Kết quả học sinh sẽ được gửi về Google Sheet.")
         else:
             st.warning("Chưa có Google Apps Script URL. Học sinh vẫn làm được nhưng kết quả chưa gửi về Google Sheet.")
         google_sheet_help()
+        st.markdown("</div>", unsafe_allow_html=True)
 
     st.divider()
     st.subheader("Xem trước đề")
     for i, q in enumerate(questions, 1):
         with st.container(border=True):
+            st.markdown('<div class="question-preview">', unsafe_allow_html=True)
             st.markdown(f"**Câu {i}.** {q.prompt}")
             if q.qtype == "mcq":
                 for label, option in zip(["A", "B", "C", "D"], q.options):
@@ -357,22 +430,21 @@ def teacher_page() -> None:
             elif q.qtype == "true_false":
                 for statement in q.statements or []:
                     st.markdown(f"**{statement['label']})** {statement['text']}")
-                st.markdown("A. Đúng&nbsp;&nbsp;&nbsp;&nbsp;B. Sai")
             else:
                 st.markdown("Học sinh nhập đáp số vào 4 ô ký tự, dùng dấu phẩy thập phân nếu có.")
             with st.expander("Đáp án và hướng dẫn"):
                 st.markdown(f"**Đáp án:** {q.answer}")
                 st.markdown(q.explanation)
+            st.markdown("</div>", unsafe_allow_html=True)
 
 
 def student_page(payload: dict) -> None:
     st.markdown('<div class="student-shell">', unsafe_allow_html=True)
-    st.title(payload["title"])
     st.markdown(
         f"""
-        <div class="student-meta">
-        Mã bài: <b>{payload['assignment_id']}</b> | Dạng: <b>{TOPICS[payload['topic']]}</b> |
-        Số câu: <b>{payload['count']}</b>
+        <div class="app-hero">
+            <h1>{payload["title"]}</h1>
+            <p>Mã bài: <b>{payload['assignment_id']}</b> &nbsp;|&nbsp; Dạng: <b>{TOPICS[payload['topic']]}</b> &nbsp;|&nbsp; Số câu: <b>{payload['count']}</b></p>
         </div>
         """,
         unsafe_allow_html=True,

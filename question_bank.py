@@ -329,7 +329,7 @@ def decimal_comma(value: int | float | Fraction) -> str:
 def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
     if topic == "ham_so_gia_tri":
         a = rng.choice([1, 2, -1, -2])
-        b = rng.randint(-4, 4)
+        b = rng.choice([-4, -3, -2, -1, 1, 2, 3, 4])
         c = rng.randint(-5, 5)
         x0 = rng.randint(-3, 3)
         x1 = rng.randint(-3, 3)
@@ -340,8 +340,8 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
         statements = [
             make_statement("a", f"$f({x0})={y0}$.", True, f"Thay $x={x0}$ vào hàm số được {y0}."),
             make_statement("b", f"Điểm $M({x1}; {y1})$ thuộc đồ thị hàm số.", True, f"Vì $f({x1})={y1}$ nên điểm đã cho thuộc đồ thị."),
-            make_statement("c", f"$f({x0})={wrong}$.", False, f"Giá trị đúng là $f({x0})={y0}$."),
-            make_statement("d", f"Đồ thị hàm số cắt trục $Oy$ tại điểm $(0; {c})$.", True, "Khi x=0 thì y=c."),
+            make_statement("c", f"Phương trình $f(x)={c}$ có hai nghiệm là $x=0$ và $x={frac_text(Fraction(-b, a))}$.", True, "Vì $f(x)=c$ tương đương $ax^2+bx=0$."),
+            make_statement("d", f"Đồ thị hàm số cắt trục $Oy$ tại điểm $(0; {wrong})$.", False, f"Đồ thị cắt trục $Oy$ tại $(0; {c})$."),
         ]
         return make_true_false_group(topic, prompt, statements)
 
@@ -355,8 +355,8 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
         statements = [
             make_statement("a", f"Trục đối xứng của $(P)$ là đường thẳng $x={h}$.", True, "Trục đối xứng có phương trình $x=-\\frac{b}{2a}$."),
             make_statement("b", f"Tọa độ đỉnh của $(P)$ là $I({h}; {k})$.", True, "Thay hoành độ đỉnh vào hàm số được tung độ đỉnh."),
-            make_statement("c", f"Parabol quay bề lõm lên trên.", a > 0, "Parabol quay bề lõm lên trên khi $a>0$."),
-            make_statement("d", f"Tọa độ đỉnh của $(P)$ là $I({-h}; {k})$.", False, f"Hoành độ đỉnh đúng là {h}."),
+            make_statement("c", f"Giá trị {'nhỏ nhất' if a > 0 else 'lớn nhất'} của hàm số bằng {k}.", True, "Giá trị cực trị của hàm số bậc hai chính là tung độ đỉnh."),
+            make_statement("d", f"Bất phương trình ${poly_text(a, b, c)} {'<=' if a > 0 else '>='} {k}$ đúng với mọi số thực $x$.", False, f"Ta có $y={a}(x-{h})^2+{k}$ nên dấu bất đẳng thức trong mệnh đề bị ngược."),
         ]
         return make_true_false_group(topic, prompt, statements)
 
@@ -371,7 +371,7 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
             make_statement("a", f"$(P)$ cắt trục $Ox$ tại $({r1};0)$ và $({r2};0)$.", True, "Giao điểm với Ox là nghiệm của phương trình y=0."),
             make_statement("b", f"$(P)$ cắt trục $Oy$ tại $(0;{c})$.", True, "Cho x=0 thì y=c."),
             make_statement("c", f"Tổng hoành độ hai giao điểm với $Ox$ bằng {r1 + r2}.", True, "Hai hoành độ là hai nghiệm r1 và r2."),
-            make_statement("d", "$(P)$ không cắt trục $Ox$.", False, "Phương trình y=0 có hai nghiệm phân biệt."),
+            make_statement("d", f"Đường thẳng $y={c}$ cắt $(P)$ tại hai điểm có hoành độ đối nhau.", False, f"Giải $y={c}$ được $x=0$ hoặc $x={r1+r2}$, không nhất thiết là hai số đối nhau."),
         ]
         return make_true_false_group(topic, prompt, statements)
 
@@ -386,8 +386,8 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
         statements = [
             make_statement("a", f"Tam thức có hai nghiệm là $x={r1}$ và $x={r2}$.", True, "Tam thức được tạo từ hai nghiệm này."),
             make_statement("b", f"$f(x)>0$ trên {pos}.", True, "Dựa vào dấu của hệ số a và hai nghiệm."),
-            make_statement("c", f"$f(x)<0$ trên {neg}.", True, "Khoảng còn lại trái dấu với hệ số a."),
-            make_statement("d", f"Tam thức luôn cùng dấu với hệ số $a$ với mọi $x$.", False, "Khi có hai nghiệm phân biệt, tam thức đổi dấu qua các nghiệm."),
+            make_statement("c", f"Tập nghiệm của bất phương trình $f(x)\\le 0$ là {inequality_answer(a, r1, r2, '<= 0')}.", True, "Lấy thêm hai nghiệm vì dấu là không dương."),
+            make_statement("d", f"Tập nghiệm của bất phương trình $f(x)\\ge 0$ là {neg}.", False, f"Với dấu không âm, tập nghiệm đúng là {inequality_answer(a, r1, r2, '>= 0')}."),
         ]
         return make_true_false_group(topic, prompt, statements)
 
@@ -401,7 +401,7 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
         make_statement("a", "Có thể đặt $t=x^2$ để đưa phương trình về bậc hai.", True, "Đây là phương trình trùng phương."),
         make_statement("b", f"Phương trình theo $t$ có hai nghiệm $t={u1}$ và $t={u2}$.", True, "Thay t=x^2 vào phương trình."),
         make_statement("c", f"Phương trình ban đầu có {len(roots)} nghiệm thực.", True, "Mỗi nghiệm dương của t cho hai nghiệm x đối nhau."),
-        make_statement("d", "Phương trình ban đầu vô nghiệm.", False, "Vì t có nghiệm dương nên phương trình có nghiệm thực."),
+        make_statement("d", f"Tổng bình phương tất cả các nghiệm thực của phương trình bằng {u1+u2}.", False, f"Mỗi giá trị t dương cho hai nghiệm đối nhau, tổng bình phương đúng là {2*(u1+u2)}."),
     ]
     return make_true_false_group(topic, prompt, statements)
 
