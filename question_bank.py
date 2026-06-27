@@ -78,6 +78,17 @@ def linear_text(a: int, b: int) -> str:
     return s
 
 
+def sign_latex(sign: str) -> str:
+    return {
+        "> 0": ">0",
+        "< 0": "<0",
+        ">= 0": "\\ge 0",
+        "<= 0": "\\le 0",
+        ">=": "\\ge",
+        "<=": "\\le",
+    }.get(sign, sign)
+
+
 def shuffled_options(rng: random.Random, correct: str, distractors: list[str]) -> list[str]:
     seen: list[str] = []
     for item in [correct, *distractors]:
@@ -236,9 +247,10 @@ def gen_inequality_question(rng: random.Random, qtype: str) -> Question:
     b = -a * (r1 + r2)
     c = a * r1 * r2
     sign = rng.choice(["> 0", "< 0", ">= 0", "<= 0"])
+    display_sign = sign_latex(sign)
     answer = inequality_answer(a, r1, r2, sign)
-    prompt = f"Giải bất phương trình ${poly_text(a, b, c)} {sign}$."
-    explanation = f"Tam thức có nghiệm {r1}, {r2}. Lập bảng xét dấu theo dấu của hệ số $a={a}$ rồi chọn các khoảng thỏa mãn dấu {sign}."
+    prompt = f"Giải bất phương trình ${poly_text(a, b, c)} {display_sign}$."
+    explanation = f"Tam thức có nghiệm {r1}, {r2}. Lập bảng xét dấu theo dấu của hệ số $a={a}$ rồi chọn các khoảng thỏa mãn dấu ${display_sign}$."
     if qtype == "mcq":
         distractors = [
             inequality_answer(-a, r1, r2, sign),
@@ -251,8 +263,8 @@ def gen_inequality_question(rng: random.Random, qtype: str) -> Question:
     return make_tf(
         rng,
         "bpt_bac_hai",
-        f"Bất phương trình ${poly_text(a, b, c)} {sign}$ có tập nghiệm là {answer}.",
-        f"Bất phương trình ${poly_text(a, b, c)} {sign}$ có tập nghiệm là {false_answer}.",
+        f"Bất phương trình ${poly_text(a, b, c)} {display_sign}$ có tập nghiệm là {answer}.",
+        f"Bất phương trình ${poly_text(a, b, c)} {display_sign}$ có tập nghiệm là {false_answer}.",
         explanation,
         f"Cần xét dấu theo hệ số $a={a}$; tập nghiệm đúng là {answer}.",
     )
@@ -356,7 +368,7 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
             make_statement("a", f"Trục đối xứng của $(P)$ là đường thẳng $x={h}$.", True, "Trục đối xứng có phương trình $x=-\\frac{b}{2a}$."),
             make_statement("b", f"Tọa độ đỉnh của $(P)$ là $I({h}; {k})$.", True, "Thay hoành độ đỉnh vào hàm số được tung độ đỉnh."),
             make_statement("c", f"Giá trị {'nhỏ nhất' if a > 0 else 'lớn nhất'} của hàm số bằng {k}.", True, "Giá trị cực trị của hàm số bậc hai chính là tung độ đỉnh."),
-            make_statement("d", f"Bất phương trình ${poly_text(a, b, c)} {'<=' if a > 0 else '>='} {k}$ đúng với mọi số thực $x$.", False, f"Ta có $y={a}(x-{h})^2+{k}$ nên dấu bất đẳng thức trong mệnh đề bị ngược."),
+            make_statement("d", f"Bất phương trình ${poly_text(a, b, c)} {'\\le' if a > 0 else '\\ge'} {k}$ đúng với mọi số thực $x$.", False, f"Ta có $y={a}(x-{h})^2+{k}$ nên dấu bất đẳng thức trong mệnh đề bị ngược."),
         ]
         return make_true_false_group(topic, prompt, statements)
 
