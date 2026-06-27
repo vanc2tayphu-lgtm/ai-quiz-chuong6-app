@@ -7,8 +7,10 @@ import requests
 import streamlit as st
 
 from question_bank import (
+    LESSONS,
     QUESTION_TYPES,
     TOPICS,
+    TOPIC_TO_LESSON,
     assignment_payload,
     decode_payload,
     encode_payload,
@@ -192,6 +194,11 @@ def default_gas_url() -> str:
         return ""
 
 
+def lesson_label_for_topic(topic: str) -> str:
+    lesson_key = TOPIC_TO_LESSON.get(topic, "")
+    return LESSONS.get(lesson_key, {}).get("label", "")
+
+
 def remember_gas_url(gas_url: str) -> None:
     if not gas_url.strip():
         return
@@ -366,7 +373,10 @@ def teacher_page() -> None:
         st.header("Cấu hình bài tập")
         title = st.text_input("Tên bài tập", "Luyện tập Chương 6 - Toán 10")
         teacher = st.text_input("Tên giáo viên", "")
-        topic = st.selectbox("Dạng toán", list(TOPICS), format_func=lambda k: TOPICS[k])
+        lesson_keys = list(LESSONS)
+        lesson = st.selectbox("Chọn bài", lesson_keys, format_func=lambda k: LESSONS[k]["label"])
+        topic_options = LESSONS[lesson]["topics"]
+        topic = st.selectbox("Dạng cụ thể", topic_options, format_func=lambda k: TOPICS[k])
         qtype = st.radio("Loại câu hỏi", list(QUESTION_TYPES), format_func=lambda k: QUESTION_TYPES[k])
         count = st.slider("Số câu", min_value=3, max_value=30, value=10)
         seed = st.number_input("Mã đề/seed", min_value=1, max_value=999999, value=12345, step=1)
@@ -395,7 +405,10 @@ def teacher_page() -> None:
     with col1:
         st.markdown('<div class="color-card">', unsafe_allow_html=True)
         st.subheader(payload["title"])
-        st.write(f"**Dạng toán:** {TOPICS[payload['topic']]}")
+        lesson_label = lesson_label_for_topic(payload["topic"])
+        if lesson_label:
+            st.write(f"**Bài học:** {lesson_label}")
+        st.write(f"**Dạng cụ thể:** {TOPICS[payload['topic']]}")
         st.write(f"**Loại câu hỏi:** {QUESTION_TYPES[payload['qtype']]}")
         st.write(f"**Số câu:** {payload['count']} | **Mã đề:** {payload['seed']} | **Mã bài:** {payload['assignment_id']}")
         st.markdown('<div class="teacher-link">', unsafe_allow_html=True)
@@ -444,7 +457,7 @@ def student_page(payload: dict) -> None:
         f"""
         <div class="app-hero">
             <h1>{payload["title"]}</h1>
-            <p>Mã bài: <b>{payload['assignment_id']}</b> &nbsp;|&nbsp; Dạng: <b>{TOPICS[payload['topic']]}</b> &nbsp;|&nbsp; Số câu: <b>{payload['count']}</b></p>
+            <p>Mã bài: <b>{payload['assignment_id']}</b> &nbsp;|&nbsp; Bài: <b>{lesson_label_for_topic(payload['topic']) or 'Chương 6'}</b> &nbsp;|&nbsp; Dạng: <b>{TOPICS[payload['topic']]}</b> &nbsp;|&nbsp; Số câu: <b>{payload['count']}</b></p>
         </div>
         """,
         unsafe_allow_html=True,

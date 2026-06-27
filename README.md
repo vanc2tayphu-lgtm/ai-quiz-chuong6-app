@@ -4,12 +4,11 @@
 
 ## Chức năng
 
-- Giáo viên chọn dạng toán:
-  - Bài 15: Hàm số
-  - Bài 16: Hàm số bậc hai
-  - Bài 17: Dấu tam thức bậc hai
-  - Bài 17: Bất phương trình bậc hai
-  - Bài 18: Phương trình quy về phương trình bậc hai
+- Giáo viên chọn theo 2 tầng: `Chọn bài` rồi `Dạng cụ thể`.
+  - Bài 15: tính giá trị, điểm thuộc đồ thị, tập xác định, đồng biến/nghịch biến.
+  - Bài 16: đỉnh/trục đối xứng, giao điểm với trục, cực trị/đơn điệu, bài toán thực tế.
+  - Bài 17: xét dấu tam thức, giải bất phương trình, tham số để tam thức không đổi dấu.
+  - Bài 18: phương trình dạng `√f(x)=g(x)`, `√f(x)=√g(x)`, phương trình trùng phương.
 - Chọn số câu và loại câu hỏi:
   - Trắc nghiệm 4 lựa chọn
   - Đúng/Sai 4 ý a), b), c), d)

@@ -10,13 +10,95 @@ from fractions import Fraction
 from typing import Callable
 
 
+LESSONS = {
+    "bai15_ham_so": {
+        "label": "Bài 15. Hàm số",
+        "description": "Tập xác định, giá trị hàm số, điểm thuộc đồ thị và sự biến thiên.",
+        "topics": [
+            "hs_tinh_gia_tri",
+            "hs_diem_thuoc_do_thi",
+            "hs_tap_xac_dinh",
+            "hs_don_dieu",
+        ],
+    },
+    "bai16_ham_so_bac_hai": {
+        "label": "Bài 16. Hàm số bậc hai",
+        "description": "Đỉnh, trục đối xứng, giao điểm, cực trị và bài toán thực tế parabol.",
+        "topics": [
+            "hsbh_dinh_truc",
+            "hsbh_giao_truc",
+            "hsbh_don_dieu_cuc_tri",
+            "hsbh_thuc_te",
+        ],
+    },
+    "bai17_dau_tam_thuc": {
+        "label": "Bài 17. Dấu của tam thức bậc hai",
+        "description": "Xét dấu tam thức, giải bất phương trình và tham số liên quan.",
+        "topics": [
+            "tt_xet_dau",
+            "tt_giai_bpt",
+            "tt_tham_so_khong_doi_dau",
+        ],
+    },
+    "bai18_pt_quy_bac_hai": {
+        "label": "Bài 18. Phương trình quy về phương trình bậc hai",
+        "description": "Phương trình căn thức và các phương trình đưa được về bậc hai.",
+        "topics": [
+            "pt_can_bang_g",
+            "pt_can_bang_can",
+            "pt_trung_phuong",
+        ],
+    },
+}
+
+
 TOPICS = {
+    "hs_tinh_gia_tri": "Tính giá trị của hàm số",
+    "hs_diem_thuoc_do_thi": "Xét điểm thuộc đồ thị hàm số",
+    "hs_tap_xac_dinh": "Tìm tập xác định của hàm số",
+    "hs_don_dieu": "Xét khoảng đồng biến, nghịch biến",
+    "hsbh_dinh_truc": "Tìm đỉnh và trục đối xứng của parabol",
+    "hsbh_giao_truc": "Tìm giao điểm của parabol với các trục",
+    "hsbh_don_dieu_cuc_tri": "Khoảng đơn điệu và giá trị lớn nhất, nhỏ nhất",
+    "hsbh_thuc_te": "Bài toán thực tế bằng hàm số bậc hai",
+    "tt_xet_dau": "Xét dấu tam thức bậc hai",
+    "tt_giai_bpt": "Giải bất phương trình bậc hai",
+    "tt_tham_so_khong_doi_dau": "Tham số để tam thức không đổi dấu",
+    "pt_can_bang_g": "Giải phương trình dạng √f(x) = g(x)",
+    "pt_can_bang_can": "Giải phương trình dạng √f(x) = √g(x)",
+    "pt_trung_phuong": "Giải phương trình trùng phương",
+    # Các khóa cũ được giữ để những link đã tạo trước đây vẫn mở được.
     "ham_so_gia_tri": "Bài 15 - Hàm số: tính giá trị, xét điểm thuộc đồ thị",
     "ham_so_bac_hai_dinh": "Bài 16 - Hàm số bậc hai: đỉnh, trục đối xứng",
     "ham_so_bac_hai_giao_diem": "Bài 16 - Hàm số bậc hai: giao điểm với trục Ox",
     "dau_tam_thuc": "Bài 17 - Dấu của tam thức bậc hai",
     "bpt_bac_hai": "Bài 17 - Giải bất phương trình bậc hai",
     "pt_quy_bac_hai": "Bài 18 - Phương trình quy về phương trình bậc hai",
+}
+
+
+TOPIC_TO_LESSON = {
+    topic: lesson_key
+    for lesson_key, lesson in LESSONS.items()
+    for topic in lesson["topics"]
+}
+
+
+TOPIC_ALIASES = {
+    "hs_tinh_gia_tri": "ham_so_gia_tri",
+    "hs_diem_thuoc_do_thi": "ham_so_gia_tri",
+    "hs_tap_xac_dinh": "ham_so_gia_tri",
+    "hs_don_dieu": "ham_so_gia_tri",
+    "hsbh_dinh_truc": "ham_so_bac_hai_dinh",
+    "hsbh_giao_truc": "ham_so_bac_hai_giao_diem",
+    "hsbh_don_dieu_cuc_tri": "ham_so_bac_hai_dinh",
+    "hsbh_thuc_te": "ham_so_bac_hai_dinh",
+    "tt_xet_dau": "dau_tam_thuc",
+    "tt_giai_bpt": "bpt_bac_hai",
+    "tt_tham_so_khong_doi_dau": "dau_tam_thuc",
+    "pt_can_bang_g": "pt_quy_bac_hai",
+    "pt_can_bang_can": "pt_quy_bac_hai",
+    "pt_trung_phuong": "pt_quy_bac_hai",
 }
 
 
@@ -147,6 +229,58 @@ def gen_value_question(rng: random.Random, qtype: str) -> Question:
     )
 
 
+def gen_point_membership_question(rng: random.Random, qtype: str) -> Question:
+    a = rng.choice([1, 2, -1, -2, 3])
+    b = rng.randint(-5, 5)
+    c = rng.randint(-6, 6)
+    x0 = rng.randint(-4, 4)
+    y0 = a * x0 * x0 + b * x0 + c
+    prompt = f"Cho hàm số $y={poly_text(a, b, c)}$. Điểm nào sau đây thuộc đồ thị hàm số?"
+    answer = f"$({x0}; {y0})$"
+    distractors = [
+        f"$({x0}; {y0 + d})$" for d in rng.sample([-4, -3, -2, -1, 1, 2, 3, 4], 3)
+    ]
+    explanation = f"Thay $x={x0}$ vào hàm số, ta được $y={y0}$ nên điểm đúng là {answer}."
+    return make_mcq(rng, "hs_diem_thuoc_do_thi", prompt, answer, distractors, explanation)
+
+
+def gen_domain_question(rng: random.Random, qtype: str) -> Question:
+    kind = rng.choice(["fraction", "sqrt"])
+    if kind == "fraction":
+        a = rng.choice([1, 2, -1, -2])
+        x0 = rng.randint(-5, 5)
+        b = -a * x0
+        prompt = f"Tìm tập xác định của hàm số $y=\\frac{{{rng.randint(1, 5)}x {rng.choice(['+', '-'])} {rng.randint(1, 6)}}}{{{linear_text(a, b)}}}$."
+        answer = f"$\\mathbb{{R}}\\setminus\\{{{x0}\\}}$"
+        distractors = [f"$\\mathbb{{R}}\\setminus\\{{{-x0}\\}}$", f"$({x0}; +\\infty)$", "$\\mathbb{R}$"]
+        explanation = f"Mẫu số phải khác 0. Giải ${linear_text(a, b)}=0$ được $x={x0}$, nên loại giá trị này khỏi $\\mathbb{{R}}$."
+    else:
+        a = rng.choice([1, 2, 3])
+        x0 = rng.randint(-5, 5)
+        b = -a * x0
+        prompt = f"Tìm tập xác định của hàm số $y=\\sqrt{{{linear_text(a, b)}}}$."
+        answer = f"$[{x0}; +\\infty)$"
+        distractors = [f"$({x0}; +\\infty)$", f"$(-\\infty; {x0}]$", "$\\mathbb{R}$"]
+        explanation = f"Biểu thức dưới dấu căn phải không âm: ${linear_text(a, b)}\\ge 0$, suy ra $x\\ge {x0}$."
+    return make_mcq(rng, "hs_tap_xac_dinh", prompt, answer, distractors, explanation)
+
+
+def gen_monotonic_question(rng: random.Random, qtype: str) -> Question:
+    a = rng.choice([1, 2, 3, -1, -2, -3])
+    b = rng.randint(-6, 6)
+    trend = "đồng biến" if a > 0 else "nghịch biến"
+    opposite = "nghịch biến" if a > 0 else "đồng biến"
+    prompt = f"Cho hàm số $y={linear_text(a, b)}$. Khẳng định nào sau đây đúng?"
+    answer = f"Hàm số {trend} trên $\\mathbb{{R}}$."
+    distractors = [
+        f"Hàm số {opposite} trên $\\mathbb{{R}}$.",
+        "Hàm số đồng biến trên $(0; +\\infty)$ và nghịch biến trên $(-\\infty; 0)$.",
+        "Hàm số không xác định tại $x=0$.",
+    ]
+    explanation = f"Hàm số bậc nhất có hệ số góc $a={a}$, nên hàm số {trend} trên toàn bộ $\\mathbb{{R}}$."
+    return make_mcq(rng, "hs_don_dieu", prompt, answer, distractors, explanation)
+
+
 def gen_vertex_question(rng: random.Random, qtype: str) -> Question:
     a = rng.choice([1, 2, -1, -2])
     h = rng.randint(-4, 4)
@@ -168,6 +302,43 @@ def gen_vertex_question(rng: random.Random, qtype: str) -> Question:
         explanation,
         f"Đỉnh đúng là {vertex}; cần dùng công thức $x=-\\frac{{b}}{{2a}}$.",
     )
+
+
+def gen_quadratic_monotonic_extreme_question(rng: random.Random, qtype: str) -> Question:
+    a = rng.choice([1, 2, -1, -2])
+    h = rng.randint(-4, 4)
+    k = rng.randint(-6, 6)
+    b = -2 * a * h
+    c = a * h * h + k
+    if a > 0:
+        answer = f"Hàm số nghịch biến trên $(-\\infty; {h})$ và đồng biến trên $({h}; +\\infty)$; giá trị nhỏ nhất bằng {k}."
+        distractors = [
+            f"Hàm số đồng biến trên $(-\\infty; {h})$ và nghịch biến trên $({h}; +\\infty)$; giá trị lớn nhất bằng {k}.",
+            f"Hàm số luôn đồng biến trên $\\mathbb{{R}}$.",
+            f"Hàm số đạt giá trị lớn nhất bằng {k}.",
+        ]
+    else:
+        answer = f"Hàm số đồng biến trên $(-\\infty; {h})$ và nghịch biến trên $({h}; +\\infty)$; giá trị lớn nhất bằng {k}."
+        distractors = [
+            f"Hàm số nghịch biến trên $(-\\infty; {h})$ và đồng biến trên $({h}; +\\infty)$; giá trị nhỏ nhất bằng {k}.",
+            f"Hàm số luôn nghịch biến trên $\\mathbb{{R}}$.",
+            f"Hàm số đạt giá trị nhỏ nhất bằng {k}.",
+        ]
+    prompt = f"Cho hàm số $y={poly_text(a, b, c)}$. Chọn khẳng định đúng về sự biến thiên và cực trị."
+    explanation = f"Đỉnh parabol là $I({h}; {k})$. Dựa vào dấu $a={a}$ để xác định chiều biến thiên và giá trị cực trị."
+    return make_mcq(rng, "hsbh_don_dieu_cuc_tri", prompt, answer, distractors, explanation)
+
+
+def gen_quadratic_realworld_question(rng: random.Random, qtype: str) -> Question:
+    h = rng.randint(2, 6)
+    k = rng.randint(20, 80)
+    a = -rng.choice([1, 2, 3])
+    c = a * h * h + k
+    prompt = f"Một vật được ném lên có độ cao sau $t$ giây là $h(t)={poly_text(a, -2*a*h, c)}$ (m). Độ cao lớn nhất của vật là bao nhiêu mét?"
+    answer = str(k)
+    distractors = [str(v) for v in [h, c, k + abs(a), k - abs(a)]]
+    explanation = f"Hàm bậc hai có $a<0$ nên đạt giá trị lớn nhất tại đỉnh. Đỉnh có tung độ {k}, vậy độ cao lớn nhất là {k} m."
+    return make_mcq(rng, "hsbh_thuc_te", prompt, answer, distractors, explanation)
 
 
 def gen_intersection_question(rng: random.Random, qtype: str) -> Question:
@@ -196,6 +367,14 @@ def gen_intersection_question(rng: random.Random, qtype: str) -> Question:
         explanation,
         f"Giao điểm với $Ox$ được tìm bằng cách giải $y=0$; kết quả đúng là {answer}.",
     )
+
+
+def gen_parameter_sign_question(rng: random.Random, qtype: str) -> Question:
+    prompt = "Tìm điều kiện của tham số $m$ để tam thức $f(x)=x^2-2mx+m+2$ luôn dương với mọi $x\\in\\mathbb{R}$."
+    answer = "$-1<m<2$"
+    distractors = ["$m<-1$ hoặc $m>2$", "$-1\\le m\\le 2$", "$m\\in\\mathbb{R}$"]
+    explanation = "Vì $a=1>0$, tam thức luôn dương khi $\\Delta<0$. Ta có $\\Delta'=m^2-m-2<0$, suy ra $-1<m<2$."
+    return make_mcq(rng, "tt_tham_so_khong_doi_dau", prompt, answer, distractors, explanation)
 
 
 def sign_answer(a: int, r1: int, r2: int) -> tuple[str, str]:
@@ -268,6 +447,29 @@ def gen_inequality_question(rng: random.Random, qtype: str) -> Question:
         explanation,
         f"Cần xét dấu theo hệ số $a={a}$; tập nghiệm đúng là {answer}.",
     )
+
+
+def gen_sqrt_equals_linear_question(rng: random.Random, qtype: str) -> Question:
+    x0 = rng.randint(0, 7)
+    value = rng.randint(1, 5)
+    p = value * value - x0
+    prompt = f"Giải phương trình $\\sqrt{{x {p:+d}}}={value}$."
+    answer = f"$x={x0}$"
+    distractors = [f"$x={x0 + d}$" for d in [-2, -1, 1, 2] if x0 + d != x0]
+    explanation = f"Điều kiện vế phải không âm đã thỏa. Bình phương hai vế: $x {p:+d}={value**2}$, suy ra $x={x0}$."
+    return make_mcq(rng, "pt_can_bang_g", prompt, answer, distractors, explanation)
+
+
+def gen_sqrt_equals_sqrt_question(rng: random.Random, qtype: str) -> Question:
+    x0 = rng.randint(-3, 6)
+    a = rng.choice([2, 3])
+    p = rng.randint(1, 8)
+    q = x0 + p - a * x0
+    prompt = f"Giải phương trình $\\sqrt{{x {p:+d}}}=\\sqrt{{{a}x {q:+d}}}$."
+    answer = f"$x={x0}$"
+    distractors = [f"$x={x0 + d}$" for d in [-2, -1, 1, 2] if x0 + d != x0]
+    explanation = f"Hai vế là căn bậc hai nên bình phương hai vế được $x {p:+d}={a}x {q:+d}$, suy ra $x={x0}$ và giá trị này thỏa điều kiện."
+    return make_mcq(rng, "pt_can_bang_can", prompt, answer, distractors, explanation)
 
 
 def gen_reducible_equation_question(rng: random.Random, qtype: str) -> Question:
@@ -363,12 +565,13 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
         k = rng.randint(-5, 5)
         b = -2 * a * h
         c = a * h * h + k
+        inequality_symbol = "\\le" if a > 0 else "\\ge"
         prompt = f"Cho parabol $(P): y={poly_text(a, b, c)}$. Xét tính đúng sai của các mệnh đề sau:"
         statements = [
             make_statement("a", f"Trục đối xứng của $(P)$ là đường thẳng $x={h}$.", True, "Trục đối xứng có phương trình $x=-\\frac{b}{2a}$."),
             make_statement("b", f"Tọa độ đỉnh của $(P)$ là $I({h}; {k})$.", True, "Thay hoành độ đỉnh vào hàm số được tung độ đỉnh."),
             make_statement("c", f"Giá trị {'nhỏ nhất' if a > 0 else 'lớn nhất'} của hàm số bằng {k}.", True, "Giá trị cực trị của hàm số bậc hai chính là tung độ đỉnh."),
-            make_statement("d", f"Bất phương trình ${poly_text(a, b, c)} {'\\le' if a > 0 else '\\ge'} {k}$ đúng với mọi số thực $x$.", False, f"Ta có $y={a}(x-{h})^2+{k}$ nên dấu bất đẳng thức trong mệnh đề bị ngược."),
+            make_statement("d", f"Bất phương trình ${poly_text(a, b, c)} {inequality_symbol} {k}$ đúng với mọi số thực $x$.", False, f"Ta có $y={a}(x-{h})^2+{k}$ nên dấu bất đẳng thức trong mệnh đề bị ngược."),
         ]
         return make_true_false_group(topic, prompt, statements)
 
@@ -419,7 +622,67 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
 
 
 def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
-    if topic == "ham_so_gia_tri":
+    if topic == "hs_diem_thuoc_do_thi":
+        a = rng.choice([1, 2, -1, -2])
+        b = rng.randint(-5, 5)
+        c = rng.randint(-6, 6)
+        x0 = rng.randint(-4, 4)
+        value = a * x0 * x0 + b * x0 + c
+        prompt = f"Cho hàm số $y={poly_text(a, b, c)}$. Điểm $M({x0}; y_0)$ thuộc đồ thị. Tính $y_0$."
+        answer = decimal_comma(value)
+        explanation = f"Thay $x={x0}$ vào hàm số được $y_0={value}$."
+    elif topic == "hs_tap_xac_dinh":
+        a = rng.choice([1, 2, -1, -2])
+        x0 = rng.randint(-5, 5)
+        b = -a * x0
+        prompt = f"Hàm số $y=\\frac{{1}}{{{linear_text(a, b)}}}$ không xác định tại $x=x_0$. Tính $x_0$."
+        answer = decimal_comma(x0)
+        explanation = f"Mẫu số bằng 0 khi ${linear_text(a, b)}=0$, suy ra $x_0={x0}$."
+    elif topic == "hs_don_dieu":
+        a = rng.choice([1, 2, 3, -1, -2, -3])
+        b = rng.randint(-6, 6)
+        prompt = f"Cho hàm số $y={linear_text(a, b)}$. Tính hệ số góc của đường thẳng."
+        answer = decimal_comma(a)
+        explanation = f"Hệ số góc của hàm số bậc nhất là hệ số của $x$, bằng {a}."
+    elif topic == "hsbh_don_dieu_cuc_tri":
+        a = rng.choice([1, 2, -1, -2])
+        h = rng.randint(-4, 4)
+        k = rng.randint(-5, 5)
+        b = -2 * a * h
+        c = a * h * h + k
+        prompt = f"Cho hàm số $y={poly_text(a, b, c)}$. Tính giá trị cực trị của hàm số."
+        answer = decimal_comma(k)
+        explanation = f"Đỉnh parabol là $I({h}; {k})$, nên giá trị cực trị bằng {k}."
+    elif topic == "hsbh_thuc_te":
+        h = rng.randint(2, 6)
+        k = rng.randint(20, 80)
+        a = -rng.choice([1, 2, 3])
+        c = a * h * h + k
+        prompt = f"Một vật có độ cao $H(t)={poly_text(a, -2*a*h, c)}$ sau $t$ giây. Tính độ cao lớn nhất."
+        answer = decimal_comma(k)
+        explanation = f"Vì $a<0$, độ cao lớn nhất là tung độ đỉnh, bằng {k}."
+    elif topic == "tt_tham_so_khong_doi_dau":
+        prompt = "Tam thức $x^2-2mx+m+2$ luôn dương với mọi $x\\in\\mathbb{R}$ khi $-1<m<a$. Tính $a$."
+        answer = "2"
+        explanation = "Điều kiện là $\\Delta'<0\\Leftrightarrow m^2-m-2<0\\Leftrightarrow -1<m<2$."
+    elif topic == "pt_can_bang_g":
+        x0 = rng.randint(0, 7)
+        value = rng.randint(1, 5)
+        p = value * value - x0
+        prompt = f"Giải phương trình $\\sqrt{{x {p:+d}}}={value}$. Nhập nghiệm $x$."
+        answer = decimal_comma(x0)
+        explanation = f"Bình phương hai vế được $x {p:+d}={value**2}$, suy ra $x={x0}$."
+    elif topic == "pt_can_bang_can":
+        x0 = rng.randint(-3, 6)
+        a = rng.choice([2, 3])
+        p = rng.randint(1, 8)
+        q = x0 + p - a * x0
+        prompt = f"Giải phương trình $\\sqrt{{x {p:+d}}}=\\sqrt{{{a}x {q:+d}}}$. Nhập nghiệm $x$."
+        answer = decimal_comma(x0)
+        explanation = f"Bình phương hai vế được $x {p:+d}={a}x {q:+d}$, suy ra $x={x0}$."
+    elif topic not in {"ham_so_gia_tri", "ham_so_bac_hai_dinh", "ham_so_bac_hai_giao_diem", "dau_tam_thuc", "bpt_bac_hai", "pt_quy_bac_hai"}:
+        return gen_short_answer_question(rng, TOPIC_ALIASES.get(topic, "pt_quy_bac_hai"))
+    elif topic == "ham_so_gia_tri":
         a = rng.choice([1, 2, -1, -2, 3])
         b = rng.randint(-5, 5)
         c = rng.randint(-6, 6)
@@ -476,6 +739,20 @@ def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
 
 
 GENERATORS: dict[str, Callable[[random.Random, str], Question]] = {
+    "hs_tinh_gia_tri": gen_value_question,
+    "hs_diem_thuoc_do_thi": gen_point_membership_question,
+    "hs_tap_xac_dinh": gen_domain_question,
+    "hs_don_dieu": gen_monotonic_question,
+    "hsbh_dinh_truc": gen_vertex_question,
+    "hsbh_giao_truc": gen_intersection_question,
+    "hsbh_don_dieu_cuc_tri": gen_quadratic_monotonic_extreme_question,
+    "hsbh_thuc_te": gen_quadratic_realworld_question,
+    "tt_xet_dau": gen_sign_question,
+    "tt_giai_bpt": gen_inequality_question,
+    "tt_tham_so_khong_doi_dau": gen_parameter_sign_question,
+    "pt_can_bang_g": gen_sqrt_equals_linear_question,
+    "pt_can_bang_can": gen_sqrt_equals_sqrt_question,
+    "pt_trung_phuong": gen_reducible_equation_question,
     "ham_so_gia_tri": gen_value_question,
     "ham_so_bac_hai_dinh": gen_vertex_question,
     "ham_so_bac_hai_giao_diem": gen_intersection_question,
@@ -486,19 +763,22 @@ GENERATORS: dict[str, Callable[[random.Random, str], Question]] = {
 
 
 def generate_questions(topic: str, qtype: str, count: int, seed: int | None = None) -> list[Question]:
-    if topic not in GENERATORS:
+    if topic not in TOPICS:
         raise ValueError(f"Unknown topic: {topic}")
     if qtype not in QUESTION_TYPES:
         raise ValueError(f"Unknown question type: {qtype}")
+    generator_topic = topic if topic in GENERATORS else TOPIC_ALIASES.get(topic, topic)
+    group_topic = TOPIC_ALIASES.get(topic, topic)
     rng = random.Random(seed)
     if qtype == "true_false":
-        questions = [gen_true_false_group_question(rng, topic) for _ in range(count)]
+        questions = [gen_true_false_group_question(rng, group_topic) for _ in range(count)]
     elif qtype == "short_answer":
         questions = [gen_short_answer_question(rng, topic) for _ in range(count)]
     else:
-        questions = [GENERATORS[topic](rng, qtype) for _ in range(count)]
+        questions = [GENERATORS[generator_topic](rng, qtype) for _ in range(count)]
     stable_seed = seed if seed is not None else "random"
     for index, question in enumerate(questions, start=1):
+        question.topic = topic
         question.id = f"{topic}-{qtype}-{stable_seed}-{index}"
         if question.statements:
             for statement in question.statements:
@@ -511,6 +791,7 @@ def assignment_payload(topic: str, qtype: str, count: int, title: str, teacher: 
         "assignment_id": str(uuid.uuid4())[:8],
         "title": title.strip() or "Bài tập Chương 6 - Toán 10",
         "teacher": teacher.strip(),
+        "lesson": TOPIC_TO_LESSON.get(topic, ""),
         "topic": topic,
         "qtype": qtype,
         "count": int(count),
