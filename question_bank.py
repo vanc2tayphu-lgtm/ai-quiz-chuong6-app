@@ -73,6 +73,7 @@ LESSONS = {
             "c9_line_phuong_trinh_tham_so",
             "c9_line_phuong_trinh_tong_quat",
             "c9_line_vi_tri_tuong_doi",
+            "c9_line_giao_diem",
         ],
     },
     "bai_c9_3_duong_tron": {
@@ -149,6 +150,7 @@ TOPICS = {
     "c9_line_phuong_trinh_tham_so": "Phương trình tham số của đường thẳng",
     "c9_line_phuong_trinh_tong_quat": "Phương trình tổng quát của đường thẳng",
     "c9_line_vi_tri_tuong_doi": "Vị trí tương đối của hai đường thẳng",
+    "c9_line_giao_diem": "Tìm giao điểm của hai đường thẳng",
     "c9_circle_tam_ban_kinh": "Nhận diện đường tròn, tìm tâm và bán kính",
     "c9_circle_viet_phuong_trinh": "Viết phương trình đường tròn",
     "c9_circle_tiep_tuyen_vi_tri": "Tiếp tuyến và vị trí tương đối với đường tròn",
@@ -324,7 +326,20 @@ def vector_text(x: int, y: int) -> str:
 
 
 def line_general_text(a: int, b: int, c: int) -> str:
-    return f"{a}x {b:+d}y {c:+d}=0"
+    def term(coef: int, var: str, first: bool = False) -> str:
+        if coef == 0:
+            return ""
+        abs_coef = abs(coef)
+        body = var if abs_coef == 1 else f"{abs_coef}{var}"
+        if first:
+            return f"-{body}" if coef < 0 else body
+        return f"{'+' if coef > 0 else '-'}{body}"
+
+    parts = [term(a, "x", True), term(b, "y")]
+    if c:
+        parts.append(f"{c:+d}")
+    expression = "".join(part for part in parts if part)
+    return f"{expression}=0"
 
 
 def circle_standard_text(h: int, k: int, r: int) -> str:
@@ -462,6 +477,19 @@ def gen_c9_line_relative_question(rng: random.Random, qtype: str) -> Question:
     prompt = f"Xét vị trí tương đối của hai đường thẳng $d_1:{line_general_text(a,b,c1)}$ và $d_2:{line_general_text(*line2)}$."
     distractors = ["Trùng nhau", "Vuông góc", "Song song", "Cắt nhau"]
     return make_mcq(rng, "c9_line_vi_tri_tuong_doi", prompt, answer, distractors, explanation)
+
+
+def gen_c9_line_intersection_question(rng: random.Random, qtype: str) -> Question:
+    x0, y0 = rng.randint(-5, 5), rng.randint(-5, 5)
+    a1, b1 = rng.choice([1, 2, -1, -2, 3]), rng.choice([1, -1, 2, -2])
+    a2, b2 = b1, -a1
+    c1 = -(a1 * x0 + b1 * y0)
+    c2 = -(a2 * x0 + b2 * y0)
+    prompt = f"Tìm giao điểm của hai đường thẳng $d_1:{line_general_text(a1,b1,c1)}$ và $d_2:{line_general_text(a2,b2,c2)}$."
+    answer = point_text(x0, y0)
+    distractors = [point_text(-x0, y0), point_text(x0, -y0), point_text(y0, x0), "Hai đường thẳng song song"]
+    explanation = f"Giao điểm là nghiệm của hệ hai phương trình đường thẳng. Thay {answer} vào cả hai phương trình đều thỏa mãn."
+    return make_mcq(rng, "c9_line_giao_diem", prompt, answer, distractors, explanation)
 
 
 def gen_c9_circle_center_radius_question(rng: random.Random, qtype: str) -> Question:
@@ -981,7 +1009,7 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
             make_statement("a", f"Một vectơ pháp tuyến của $d$ là $\\vec n={vector_text(a, b)}$.", True, "Với $ax+by+c=0$, VTPT là $(a;b)$."),
             make_statement("b", f"Một vectơ chỉ phương của $d$ là $\\vec u={vector_text(b, -a)}$.", True, "VTCP vuông góc với VTPT $(a;b)$ là $(b;-a)$."),
             make_statement("c", f"Điểm $M{point_text(x0, y0)}$ thuộc đường thẳng $d$.", True, "Thay tọa độ điểm vào phương trình được 0."),
-            make_statement("d", f"Đường thẳng ${line_general_text(a, b, c + 2)}$ trùng với $d$.", False, "Hai đường thẳng có cùng hệ số a,b nhưng hệ số tự do khác nên song song."),
+            make_statement("d", f"Đường thẳng ${line_general_text(a, b, c + 2)}$ song song với $d$.", True, "Hai đường thẳng có cùng vectơ pháp tuyến nhưng hệ số tự do khác nên song song."),
         ]
         return make_true_false_group(topic, prompt, statements)
 
@@ -1160,6 +1188,16 @@ def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
         prompt = f"Hai đường thẳng $d_1:{line_general_text(a,b,c1)}$ và $d_2:{line_general_text(a,b,c1+3)}$ song song hay cắt nhau? Nhập 1 nếu song song, 0 nếu cắt nhau."
         answer = "1"
         explanation = "Hai đường thẳng có cùng cặp hệ số a,b nhưng hệ số tự do khác nên song song."
+    elif topic == "c9_line_giao_diem":
+        x0, y0 = rng.randint(-5, 5), rng.randint(-5, 5)
+        a1, b1 = rng.choice([1, 2, -1, -2, 3]), rng.choice([1, -1, 2, -2])
+        a2, b2 = b1, -a1
+        c1 = -(a1 * x0 + b1 * y0)
+        c2 = -(a2 * x0 + b2 * y0)
+        ask_x = rng.choice([True, False])
+        prompt = f"Hai đường thẳng $d_1:{line_general_text(a1,b1,c1)}$ và $d_2:{line_general_text(a2,b2,c2)}$ cắt nhau tại $I(x_0;y_0)$. Tính {'x_0' if ask_x else 'y_0'}."
+        answer = decimal_comma(x0 if ask_x else y0)
+        explanation = f"Giải hệ hai phương trình được giao điểm $I{point_text(x0, y0)}$."
     elif topic == "c9_circle_tam_ban_kinh":
         h, k, r = rng.randint(-5, 5), rng.randint(-5, 5), rng.randint(1, 6)
         prompt = f"Đường tròn $(C): {circle_standard_text(h, k, r)}$. Tính bán kính $R$."
@@ -1380,6 +1418,7 @@ GENERATORS: dict[str, Callable[[random.Random, str], Question]] = {
     "c9_line_phuong_trinh_tham_so": gen_c9_line_param_question,
     "c9_line_phuong_trinh_tong_quat": gen_c9_line_general_question,
     "c9_line_vi_tri_tuong_doi": gen_c9_line_relative_question,
+    "c9_line_giao_diem": gen_c9_line_intersection_question,
     "c9_circle_tam_ban_kinh": gen_c9_circle_center_radius_question,
     "c9_circle_viet_phuong_trinh": gen_c9_circle_equation_question,
     "c9_circle_tiep_tuyen_vi_tri": gen_c9_circle_tangent_question,

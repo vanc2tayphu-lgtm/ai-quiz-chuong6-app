@@ -11,7 +11,7 @@
   - Bài 18: phương trình dạng `√f(x)=g(x)`, `√f(x)=√g(x)`, phương trình trùng phương.
 - Chương 9: phương pháp tọa độ trong mặt phẳng.
   - Tọa độ vectơ: tọa độ điểm/vectơ trong mặt phẳng, độ dài vectơ, tích vô hướng, trung điểm đoạn thẳng, trọng tâm tam giác.
-  - Đường thẳng: phương trình tham số, phương trình tổng quát, vị trí tương đối.
+  - Đường thẳng: phương trình tham số, phương trình tổng quát, vị trí tương đối, giao điểm hai đường thẳng.
   - Đường tròn: tâm/bán kính, viết phương trình, tiếp tuyến/vị trí tương đối.
   - Conic: elip, hypebol, parabol.
 - Chọn số câu và loại câu hỏi:
