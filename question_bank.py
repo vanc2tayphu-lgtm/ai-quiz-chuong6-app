@@ -286,7 +286,10 @@ def shuffled_options(rng: random.Random, correct: str, distractors: list[str]) -
         if item not in seen:
             seen.append(item)
     while len(seen) < 4:
-        seen.append(str(rng.randint(-12, 12)))
+        if "$" in correct or "\\" in correct or "(" in correct or "=" in correct:
+            seen.append(f"$\\text{{Phương án khác {len(seen)}}}$")
+        else:
+            seen.append(str(rng.randint(-12, 12)))
     options = seen[:4]
     rng.shuffle(options)
     return options
@@ -340,6 +343,17 @@ def line_general_text(a: int, b: int, c: int) -> str:
         parts.append(f"{c:+d}")
     expression = "".join(part for part in parts if part)
     return f"{expression}=0"
+
+
+def line_param_text(x0: int, y0: int, ux: int, uy: int) -> str:
+    def param_term(coef: int) -> str:
+        if coef == 1:
+            return "+t"
+        if coef == -1:
+            return "-t"
+        return f"{coef:+d}t"
+
+    return f"$\\begin{{cases}}x={x0}{param_term(ux)}\\\\y={y0}{param_term(uy)}\\end{{cases}}$"
 
 
 def circle_standard_text(h: int, k: int, r: int) -> str:
@@ -440,12 +454,24 @@ def gen_c9_line_param_question(rng: random.Random, qtype: str) -> Question:
     x0, y0 = rng.randint(-5, 5), rng.randint(-5, 5)
     ux, uy = rng.choice([-3, -2, -1, 1, 2, 3]), rng.choice([-3, -2, -1, 1, 2, 3])
     prompt = f"Viết phương trình tham số của đường thẳng đi qua $M{point_text(x0, y0)}$ và có vectơ chỉ phương $\\vec u={vector_text(ux, uy)}$."
-    answer = f"$\\begin{{cases}}x={x0}{ux:+d}t\\\\y={y0}{uy:+d}t\\end{{cases}}$"
-    distractors = [
-        f"$\\begin{{cases}}x={x0}{uy:+d}t\\\\y={y0}{ux:+d}t\\end{{cases}}$",
-        f"$\\begin{{cases}}x={ux}{x0:+d}t\\\\y={uy}{y0:+d}t\\end{{cases}}$",
-        f"${line_general_text(ux, uy, -(ux*x0+uy*y0))}$",
+    answer = line_param_text(x0, y0, ux, uy)
+    candidates = [
+        line_param_text(x0, y0, uy, ux),
+        line_param_text(-x0, -y0, ux, uy),
+        line_param_text(x0, y0, -ux, -uy),
+        line_param_text(x0 + 1, y0, ux, uy),
+        line_param_text(x0, y0 - 1, ux, uy),
     ]
+    for dx in [-2, -1, 1, 2, 3]:
+        for dy in [-2, -1, 1, 2, 3]:
+            candidates.append(line_param_text(x0 + dx, y0 + dy, ux, uy))
+            candidates.append(line_param_text(x0, y0, ux + dx, uy + dy))
+    distractors = []
+    for item in candidates:
+        if item != answer and item not in distractors:
+            distractors.append(item)
+        if len(distractors) == 3:
+            break
     explanation = "Đường thẳng qua $M(x_0;y_0)$ có VTCP $(u_1;u_2)$ có phương trình tham số $x=x_0+u_1t, y=y_0+u_2t$."
     return make_mcq(rng, "c9_line_phuong_trinh_tham_so", prompt, answer, distractors, explanation)
 
