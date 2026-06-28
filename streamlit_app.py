@@ -512,29 +512,28 @@ def teacher_page() -> None:
     tab_setup, tab_preview, tab_stats = st.tabs(["Thiết lập & chia sẻ", "Xem trước đề", "Thống kê"])
 
     with tab_setup:
-        with st.form("teacher_settings_form"):
-            left, right = st.columns([1.1, 0.9], gap="large")
-            with left:
-                st.subheader("Thông tin đề")
-                title = st.text_input("Tên bài tập", "Luyện tập Toán 10")
-                teacher = st.text_input("Tên giáo viên", "")
-                chapter_keys = list(CHAPTERS)
-                chapter = st.selectbox("Chọn chương", chapter_keys, format_func=lambda k: CHAPTERS[k]["label"])
-                lesson_keys = CHAPTERS[chapter]["lessons"]
-                lesson = st.selectbox("Chọn bài", lesson_keys, format_func=lambda k: LESSONS[k]["label"])
-                topic_options = LESSONS[lesson]["topics"]
-                topic = st.selectbox("Dạng cụ thể", topic_options, format_func=lambda k: TOPICS[k])
-            with right:
-                st.subheader("Cấu hình sinh đề")
-                qtype = st.radio("Loại câu hỏi", list(QUESTION_TYPES), format_func=lambda k: QUESTION_TYPES[k])
-                count = st.slider("Số câu", min_value=3, max_value=30, value=10)
-                seed = st.number_input("Mã đề/seed", min_value=1, max_value=999999, value=12345, step=1)
-                gas_url = st.text_input(
-                    "Google Apps Script Web App URL",
-                    value=default_gas_url(),
-                    placeholder="https://script.google.com/macros/s/.../exec",
-                )
-            generate = st.form_submit_button("Tạo / cập nhật bài tập", type="primary", use_container_width=True)
+        left, right = st.columns([1.1, 0.9], gap="large")
+        with left:
+            st.subheader("Thông tin đề")
+            title = st.text_input("Tên bài tập", "Luyện tập Toán 10")
+            teacher = st.text_input("Tên giáo viên", "")
+            chapter_keys = list(CHAPTERS)
+            chapter = st.selectbox("Chọn chương", chapter_keys, format_func=lambda k: CHAPTERS[k]["label"], key="teacher_chapter")
+            lesson_keys = CHAPTERS[chapter]["lessons"]
+            lesson = st.selectbox("Chọn bài", lesson_keys, format_func=lambda k: LESSONS[k]["label"], key=f"teacher_lesson_{chapter}")
+            topic_options = LESSONS[lesson]["topics"]
+            topic = st.selectbox("Dạng cụ thể", topic_options, format_func=lambda k: TOPICS[k], key=f"teacher_topic_{lesson}")
+        with right:
+            st.subheader("Cấu hình sinh đề")
+            qtype = st.radio("Loại câu hỏi", list(QUESTION_TYPES), format_func=lambda k: QUESTION_TYPES[k])
+            count = st.slider("Số câu", min_value=3, max_value=30, value=10)
+            seed = st.number_input("Mã đề/seed", min_value=1, max_value=999999, value=12345, step=1)
+            gas_url = st.text_input(
+                "Google Apps Script Web App URL",
+                value=default_gas_url(),
+                placeholder="https://script.google.com/macros/s/.../exec",
+            )
+            generate = st.button("Tạo / cập nhật bài tập", type="primary", use_container_width=True)
 
         if generate or "teacher_payload" not in st.session_state:
             if generate:
