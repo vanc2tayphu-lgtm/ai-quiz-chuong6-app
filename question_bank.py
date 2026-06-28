@@ -59,10 +59,11 @@ LESSONS = {
         "label": "Bài 1. Tọa độ vectơ trong mặt phẳng",
         "description": "Tọa độ điểm, tọa độ vectơ, trung điểm, trọng tâm và phép toán vectơ.",
         "topics": [
-            "c9_vec_toa_do_tren_truc",
             "c9_vec_toa_do_he_truc",
+            "c9_vec_do_dai",
             "c9_vec_phep_toan",
-            "c9_vec_trung_diem_trong_tam",
+            "c9_vec_trung_diem",
+            "c9_vec_trong_tam",
         ],
     },
     "bai_c9_2_duong_thang": {
@@ -138,9 +139,12 @@ TOPICS = {
     "pt_can_bang_g": "Giải phương trình dạng √f(x) = g(x)",
     "pt_can_bang_can": "Giải phương trình dạng √f(x) = √g(x)",
     "pt_trung_phuong": "Giải phương trình trùng phương",
-    "c9_vec_toa_do_tren_truc": "Tọa độ trên trục",
+    "c9_vec_toa_do_tren_truc": "Tọa độ vectơ trong mặt phẳng",
     "c9_vec_toa_do_he_truc": "Tọa độ điểm và vectơ trên hệ trục",
-    "c9_vec_phep_toan": "Phép toán vectơ, độ dài và tích vô hướng",
+    "c9_vec_do_dai": "Tính độ dài vectơ",
+    "c9_vec_phep_toan": "Phép toán vectơ và tích vô hướng",
+    "c9_vec_trung_diem": "Tọa độ trung điểm đoạn thẳng",
+    "c9_vec_trong_tam": "Tọa độ trọng tâm tam giác",
     "c9_vec_trung_diem_trong_tam": "Tọa độ trung điểm và trọng tâm",
     "c9_line_phuong_trinh_tham_so": "Phương trình tham số của đường thẳng",
     "c9_line_phuong_trinh_tong_quat": "Phương trình tổng quát của đường thẳng",
@@ -312,11 +316,11 @@ def make_tf(rng: random.Random, topic: str, true_prompt: str, false_prompt: str,
 
 
 def point_text(x: int, y: int) -> str:
-    return f"$({x}; {y})$"
+    return f"({x}; {y})"
 
 
 def vector_text(x: int, y: int) -> str:
-    return f"$({x}; {y})$"
+    return f"({x}; {y})"
 
 
 def line_general_text(a: int, b: int, c: int) -> str:
@@ -328,13 +332,15 @@ def circle_standard_text(h: int, k: int, r: int) -> str:
 
 
 def gen_c9_vector_axis_question(rng: random.Random, qtype: str) -> Question:
-    a = rng.randint(-6, 6)
-    b = rng.randint(-6, 6)
-    value = b - a
-    prompt = f"Trên trục tọa độ, cho hai điểm $A({a})$, $B({b})$. Tọa độ của vectơ $\\overrightarrow{{AB}}$ là"
-    answer = str(value)
-    distractors = [str(a - b), str(a + b), str(abs(value)), str(-value)]
-    explanation = f"Trên trục tọa độ, $\\overrightarrow{{AB}}=x_B-x_A={b}-{a}={value}$."
+    ax, ay = rng.randint(-5, 4), rng.randint(-5, 4)
+    ux, uy = rng.randint(-4, 4), rng.randint(-4, 4)
+    if ux == 0 and uy == 0:
+        ux = 3
+    bx, by = ax + ux, ay + uy
+    prompt = f"Trong mặt phẳng $Oxy$, cho $A{point_text(ax, ay)}$ và $B{point_text(bx, by)}$. Tọa độ của vectơ $\\overrightarrow{{AB}}$ là"
+    answer = vector_text(ux, uy)
+    distractors = [vector_text(-ux, -uy), vector_text(ax + bx, ay + by), vector_text(uy, ux), vector_text(abs(ux), abs(uy))]
+    explanation = f"$\\overrightarrow{{AB}}=(x_B-x_A; y_B-y_A)=({bx}-{ax}; {by}-{ay})={answer}$."
     return make_mcq(rng, "c9_vec_toa_do_tren_truc", prompt, answer, distractors, explanation)
 
 
@@ -366,6 +372,21 @@ def gen_c9_vector_operation_question(rng: random.Random, qtype: str) -> Question
     return make_mcq(rng, "c9_vec_phep_toan", prompt, answer, distractors, explanation)
 
 
+def gen_c9_vector_length_question(rng: random.Random, qtype: str) -> Question:
+    pairs = [(3, 4), (5, 12), (6, 8), (8, 15), (7, 24)]
+    ux, uy = rng.choice(pairs)
+    if rng.choice([True, False]):
+        ux = -ux
+    if rng.choice([True, False]):
+        uy = -uy
+    length = int((ux * ux + uy * uy) ** 0.5)
+    prompt = f"Cho vectơ $\\vec u={vector_text(ux, uy)}$. Độ dài của vectơ $\\vec u$ bằng"
+    answer = str(length)
+    distractors = [str(abs(ux) + abs(uy)), str(ux * ux + uy * uy), str(abs(ux)), str(abs(uy))]
+    explanation = f"$|\\vec u|=\\sqrt{{{ux}^2+{uy}^2}}={length}$."
+    return make_mcq(rng, "c9_vec_do_dai", prompt, answer, distractors, explanation)
+
+
 def gen_c9_midpoint_centroid_question(rng: random.Random, qtype: str) -> Question:
     ax, ay = rng.randint(-6, 2), rng.randint(-6, 2)
     bx, by = ax + 2 * rng.randint(1, 5), ay + 2 * rng.randint(1, 5)
@@ -375,6 +396,29 @@ def gen_c9_midpoint_centroid_question(rng: random.Random, qtype: str) -> Questio
     distractors = [point_text(ax + bx, ay + by), point_text(bx - ax, by - ay), point_text(-mx, my), point_text(mx, -my)]
     explanation = f"$M\\left(\\frac{{x_A+x_B}}{{2}};\\frac{{y_A+y_B}}{{2}}\\right)={answer}$."
     return make_mcq(rng, "c9_vec_trung_diem_trong_tam", prompt, answer, distractors, explanation)
+
+
+def gen_c9_midpoint_question(rng: random.Random, qtype: str) -> Question:
+    ax, ay = rng.randint(-6, 2), rng.randint(-6, 2)
+    bx, by = ax + 2 * rng.randint(1, 5), ay + 2 * rng.randint(1, 5)
+    mx, my = (ax + bx) // 2, (ay + by) // 2
+    prompt = f"Cho $A{point_text(ax, ay)}$ và $B{point_text(bx, by)}$. Tọa độ trung điểm $M$ của đoạn thẳng $AB$ là"
+    answer = point_text(mx, my)
+    distractors = [point_text(ax + bx, ay + by), point_text(bx - ax, by - ay), point_text(-mx, my), point_text(mx, -my)]
+    explanation = f"$M\\left(\\frac{{x_A+x_B}}{{2}};\\frac{{y_A+y_B}}{{2}}\\right)={answer}$."
+    return make_mcq(rng, "c9_vec_trung_diem", prompt, answer, distractors, explanation)
+
+
+def gen_c9_centroid_question(rng: random.Random, qtype: str) -> Question:
+    gx, gy = rng.randint(-4, 4), rng.randint(-4, 4)
+    ax, ay = rng.randint(-5, 5), rng.randint(-5, 5)
+    bx, by = rng.randint(-5, 5), rng.randint(-5, 5)
+    cx, cy = 3 * gx - ax - bx, 3 * gy - ay - by
+    prompt = f"Cho tam giác $ABC$ với $A{point_text(ax, ay)}$, $B{point_text(bx, by)}$, $C{point_text(cx, cy)}$. Tọa độ trọng tâm $G$ là"
+    answer = point_text(gx, gy)
+    distractors = [point_text(ax + bx + cx, ay + by + cy), point_text(-gx, gy), point_text(gx, -gy), point_text(gx + 1, gy)]
+    explanation = f"$G\\left(\\frac{{x_A+x_B+x_C}}{{3}};\\frac{{y_A+y_B+y_C}}{{3}}\\right)={answer}$."
+    return make_mcq(rng, "c9_vec_trong_tam", prompt, answer, distractors, explanation)
 
 
 def gen_c9_line_param_question(rng: random.Random, qtype: str) -> Question:
@@ -1045,10 +1089,15 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
 
 def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
     if topic == "c9_vec_toa_do_tren_truc":
-        a, b = rng.randint(-6, 6), rng.randint(-6, 6)
-        prompt = f"Trên trục tọa độ, cho $A({a})$, $B({b})$. Tính tọa độ của vectơ $\\overrightarrow{{AB}}$."
-        answer = decimal_comma(b - a)
-        explanation = f"$\\overrightarrow{{AB}}={b}-{a}={b-a}$."
+        ax, ay = rng.randint(-5, 4), rng.randint(-5, 4)
+        ux, uy = rng.randint(-4, 4), rng.randint(-4, 4)
+        if ux == 0 and uy == 0:
+            ux = 2
+        bx, by = ax + ux, ay + uy
+        ask_x = rng.choice([True, False])
+        prompt = f"Cho $A{point_text(ax, ay)}$, $B{point_text(bx, by)}$. Tính {'hoành độ' if ask_x else 'tung độ'} của vectơ $\\overrightarrow{{AB}}$."
+        answer = decimal_comma(ux if ask_x else uy)
+        explanation = f"$\\overrightarrow{{AB}}=({bx}-{ax}; {by}-{ay})={vector_text(ux, uy)}$."
     elif topic == "c9_vec_toa_do_he_truc":
         ax, ay = rng.randint(-5, 4), rng.randint(-5, 4)
         ux, uy = rng.randint(-4, 4), rng.randint(-4, 4)
@@ -1064,12 +1113,35 @@ def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
         prompt = f"Cho $\\vec u={vector_text(ux, uy)}$, $\\vec v={vector_text(vx, vy)}$. Tính $\\vec u\\cdot\\vec v$."
         answer = decimal_comma(ux * vx + uy * vy)
         explanation = f"Tích vô hướng bằng {ux}·{vx}+{uy}·{vy}={ux*vx+uy*vy}."
+    elif topic == "c9_vec_do_dai":
+        ux, uy = rng.choice([(3, 4), (5, 12), (6, 8), (8, 15)])
+        if rng.choice([True, False]):
+            ux = -ux
+        prompt = f"Cho vectơ $\\vec u={vector_text(ux, uy)}$. Tính độ dài $|\\vec u|$."
+        answer = decimal_comma(int((ux * ux + uy * uy) ** 0.5))
+        explanation = f"$|\\vec u|=\\sqrt{{{ux}^2+{uy}^2}}={answer}$."
     elif topic == "c9_vec_trung_diem_trong_tam":
         ax, ay = rng.randint(-6, 2), rng.randint(-6, 2)
         bx, by = ax + 2 * rng.randint(1, 5), ay + 2 * rng.randint(1, 5)
         prompt = f"Cho $A{point_text(ax, ay)}$, $B{point_text(bx, by)}$. Tính hoành độ trung điểm của $AB$."
         answer = decimal_comma((ax + bx) // 2)
         explanation = "Hoành độ trung điểm bằng trung bình cộng hai hoành độ."
+    elif topic == "c9_vec_trung_diem":
+        ax, ay = rng.randint(-6, 2), rng.randint(-6, 2)
+        bx, by = ax + 2 * rng.randint(1, 5), ay + 2 * rng.randint(1, 5)
+        ask_x = rng.choice([True, False])
+        prompt = f"Cho $A{point_text(ax, ay)}$, $B{point_text(bx, by)}$. Tính {'hoành độ' if ask_x else 'tung độ'} trung điểm của $AB$."
+        answer = decimal_comma(((ax + bx) // 2) if ask_x else ((ay + by) // 2))
+        explanation = "Tọa độ trung điểm bằng trung bình cộng tọa độ hai đầu mút."
+    elif topic == "c9_vec_trong_tam":
+        gx, gy = rng.randint(-4, 4), rng.randint(-4, 4)
+        ax, ay = rng.randint(-5, 5), rng.randint(-5, 5)
+        bx, by = rng.randint(-5, 5), rng.randint(-5, 5)
+        cx, cy = 3 * gx - ax - bx, 3 * gy - ay - by
+        ask_x = rng.choice([True, False])
+        prompt = f"Cho tam giác $ABC$ với $A{point_text(ax, ay)}$, $B{point_text(bx, by)}$, $C{point_text(cx, cy)}$. Tính {'hoành độ' if ask_x else 'tung độ'} trọng tâm $G$."
+        answer = decimal_comma(gx if ask_x else gy)
+        explanation = "Tọa độ trọng tâm bằng trung bình cộng tọa độ ba đỉnh."
     elif topic == "c9_line_phuong_trinh_tham_so":
         x0, y0 = rng.randint(-5, 5), rng.randint(-5, 5)
         ux, uy = rng.choice([-3, -2, -1, 1, 2, 3]), rng.choice([-3, -2, -1, 1, 2, 3])
@@ -1300,7 +1372,10 @@ GENERATORS: dict[str, Callable[[random.Random, str], Question]] = {
     "pt_trung_phuong": gen_reducible_equation_question,
     "c9_vec_toa_do_tren_truc": gen_c9_vector_axis_question,
     "c9_vec_toa_do_he_truc": gen_c9_vector_coordinate_question,
+    "c9_vec_do_dai": gen_c9_vector_length_question,
     "c9_vec_phep_toan": gen_c9_vector_operation_question,
+    "c9_vec_trung_diem": gen_c9_midpoint_question,
+    "c9_vec_trong_tam": gen_c9_centroid_question,
     "c9_vec_trung_diem_trong_tam": gen_c9_midpoint_centroid_question,
     "c9_line_phuong_trinh_tham_so": gen_c9_line_param_question,
     "c9_line_phuong_trinh_tong_quat": gen_c9_line_general_question,
