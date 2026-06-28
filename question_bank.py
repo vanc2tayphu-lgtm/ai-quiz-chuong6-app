@@ -18,16 +18,22 @@ LESSONS = {
             "hs_tinh_gia_tri",
             "hs_diem_thuoc_do_thi",
             "hs_tap_xac_dinh",
+            "hs_txd_tham_so",
             "hs_don_dieu",
+            "hs_don_dieu_tham_so",
+            "hs_bang_du_lieu_thuc_te",
         ],
     },
     "bai16_ham_so_bac_hai": {
         "label": "Bài 16. Hàm số bậc hai",
         "description": "Đỉnh, trục đối xứng, giao điểm, cực trị và bài toán thực tế parabol.",
         "topics": [
+            "hsbh_xac_dinh_ham_so",
             "hsbh_dinh_truc",
             "hsbh_giao_truc",
             "hsbh_don_dieu_cuc_tri",
+            "hsbh_ve_do_thi_bang_gia_tri",
+            "hsbh_tham_so_don_dieu",
             "hsbh_thuc_te",
         ],
     },
@@ -56,10 +62,16 @@ TOPICS = {
     "hs_tinh_gia_tri": "Tính giá trị của hàm số",
     "hs_diem_thuoc_do_thi": "Xét điểm thuộc đồ thị hàm số",
     "hs_tap_xac_dinh": "Tìm tập xác định của hàm số",
+    "hs_txd_tham_so": "Tập xác định của hàm số chứa tham số",
     "hs_don_dieu": "Xét khoảng đồng biến, nghịch biến",
+    "hs_don_dieu_tham_so": "Đồng biến, nghịch biến của hàm số chứa tham số",
+    "hs_bang_du_lieu_thuc_te": "Hàm số cho bằng bảng dữ liệu thực tế",
+    "hsbh_xac_dinh_ham_so": "Xác định hàm số bậc hai",
     "hsbh_dinh_truc": "Tìm đỉnh và trục đối xứng của parabol",
     "hsbh_giao_truc": "Tìm giao điểm của parabol với các trục",
     "hsbh_don_dieu_cuc_tri": "Khoảng đơn điệu và giá trị lớn nhất, nhỏ nhất",
+    "hsbh_ve_do_thi_bang_gia_tri": "Lập bảng giá trị và nhận dạng đồ thị parabol",
+    "hsbh_tham_so_don_dieu": "Tìm tham số để hàm số bậc hai đơn điệu",
     "hsbh_thuc_te": "Bài toán thực tế bằng hàm số bậc hai",
     "tt_xet_dau": "Xét dấu tam thức bậc hai",
     "tt_giai_bpt": "Giải bất phương trình bậc hai",
@@ -88,10 +100,16 @@ TOPIC_ALIASES = {
     "hs_tinh_gia_tri": "ham_so_gia_tri",
     "hs_diem_thuoc_do_thi": "ham_so_gia_tri",
     "hs_tap_xac_dinh": "ham_so_gia_tri",
+    "hs_txd_tham_so": "ham_so_gia_tri",
     "hs_don_dieu": "ham_so_gia_tri",
+    "hs_don_dieu_tham_so": "ham_so_gia_tri",
+    "hs_bang_du_lieu_thuc_te": "ham_so_gia_tri",
+    "hsbh_xac_dinh_ham_so": "ham_so_bac_hai_dinh",
     "hsbh_dinh_truc": "ham_so_bac_hai_dinh",
     "hsbh_giao_truc": "ham_so_bac_hai_giao_diem",
     "hsbh_don_dieu_cuc_tri": "ham_so_bac_hai_dinh",
+    "hsbh_ve_do_thi_bang_gia_tri": "ham_so_bac_hai_dinh",
+    "hsbh_tham_so_don_dieu": "ham_so_bac_hai_dinh",
     "hsbh_thuc_te": "ham_so_bac_hai_dinh",
     "tt_xet_dau": "dau_tam_thuc",
     "tt_giai_bpt": "bpt_bac_hai",
@@ -281,6 +299,51 @@ def gen_monotonic_question(rng: random.Random, qtype: str) -> Question:
     return make_mcq(rng, "hs_don_dieu", prompt, answer, distractors, explanation)
 
 
+def gen_domain_parameter_question(rng: random.Random, qtype: str) -> Question:
+    m = rng.randint(-5, 5)
+    prompt = f"Hàm số $y=\\frac{{1}}{{x-m}}$ có tập xác định là $\\mathbb{{R}}\\setminus\\{{{m}\\}}$. Giá trị của tham số $m$ là"
+    answer = str(m)
+    distractors = [str(m + d) for d in [-2, -1, 1, 2]]
+    explanation = f"Hàm số không xác định khi mẫu bằng 0, tức $x-m=0\\Leftrightarrow x=m$. Vì điểm bị loại là {m}, nên $m={m}$."
+    return make_mcq(rng, "hs_txd_tham_so", prompt, answer, distractors, explanation)
+
+
+def gen_monotonic_parameter_question(rng: random.Random, qtype: str) -> Question:
+    threshold = rng.randint(-3, 4)
+    direction = rng.choice(["đồng biến", "nghịch biến"])
+    prompt = f"Tìm điều kiện của tham số $m$ để hàm số $y=(m {(-threshold):+d})x+{rng.randint(-5, 5)}$ {direction} trên $\\mathbb{{R}}$."
+    if direction == "đồng biến":
+        answer = f"$m>{threshold}$"
+        distractors = [f"$m<{threshold}$", f"$m\\ge {threshold}$", f"$m\\le {threshold}$"]
+        explanation = f"Hàm số bậc nhất đồng biến khi hệ số góc dương: $m {(-threshold):+d}>0$, suy ra $m>{threshold}$."
+    else:
+        answer = f"$m<{threshold}$"
+        distractors = [f"$m>{threshold}$", f"$m\\ge {threshold}$", f"$m\\le {threshold}$"]
+        explanation = f"Hàm số bậc nhất nghịch biến khi hệ số góc âm: $m {(-threshold):+d}<0$, suy ra $m<{threshold}$."
+    return make_mcq(rng, "hs_don_dieu_tham_so", prompt, answer, distractors, explanation)
+
+
+def gen_table_data_question(rng: random.Random, qtype: str) -> Question:
+    minute = rng.choice([6, 10, 18, 28, 35])
+    if minute <= 8:
+        price = 5000
+    elif minute <= 15:
+        price = 5500
+    elif minute <= 25:
+        price = 6000
+    else:
+        price = 6500
+    prompt = (
+        "Một hãng điện thoại cho bảng giá cước theo thời gian gọi: không quá 8 phút: 5000 đồng/phút; "
+        "từ phút 9 đến 15: 5500 đồng/phút; từ phút 16 đến 25: 6000 đồng/phút; từ phút 26 trở đi: 6500 đồng/phút. "
+        f"Nếu cuộc gọi kéo dài {minute} phút thì giá cước mỗi phút là bao nhiêu?"
+    )
+    answer = str(price)
+    distractors = ["5000", "5500", "6000", "6500"]
+    explanation = f"Vì {minute} phút thuộc khoảng quy định tương ứng nên giá cước là {price} đồng/phút."
+    return make_mcq(rng, "hs_bang_du_lieu_thuc_te", prompt, answer, distractors, explanation)
+
+
 def gen_vertex_question(rng: random.Random, qtype: str) -> Question:
     a = rng.choice([1, 2, -1, -2])
     h = rng.randint(-4, 4)
@@ -339,6 +402,60 @@ def gen_quadratic_realworld_question(rng: random.Random, qtype: str) -> Question
     distractors = [str(v) for v in [h, c, k + abs(a), k - abs(a)]]
     explanation = f"Hàm bậc hai có $a<0$ nên đạt giá trị lớn nhất tại đỉnh. Đỉnh có tung độ {k}, vậy độ cao lớn nhất là {k} m."
     return make_mcq(rng, "hsbh_thuc_te", prompt, answer, distractors, explanation)
+
+
+def gen_quadratic_identify_function_question(rng: random.Random, qtype: str) -> Question:
+    a = rng.choice([1, 2, -1, -2])
+    h = rng.randint(-3, 3)
+    k = rng.randint(-5, 5)
+    b = -2 * a * h
+    c = a * h * h + k
+    x0 = h + rng.choice([-2, -1, 1, 2])
+    y0 = a * x0 * x0 + b * x0 + c
+    prompt = f"Xác định hàm số bậc hai $y=ax^2+bx+c$, biết đồ thị có đỉnh $I({h}; {k})$ và đi qua điểm $M({x0}; {y0})$."
+    answer = f"$y={poly_text(a, b, c)}$"
+    distractors = [
+        f"$y={poly_text(-a, -b, c)}$",
+        f"$y={poly_text(a, -b, c)}$",
+        f"$y={poly_text(a, b, c + rng.choice([-2, -1, 1, 2]))}$",
+    ]
+    explanation = f"Dùng dạng đỉnh $y=a(x-{h})^2+{k}$. Thay điểm $M({x0}; {y0})$ vào tìm được $a={a}$, khai triển được {answer}."
+    return make_mcq(rng, "hsbh_xac_dinh_ham_so", prompt, answer, distractors, explanation)
+
+
+def gen_quadratic_value_table_question(rng: random.Random, qtype: str) -> Question:
+    a = rng.choice([1, -1, 2, -2])
+    h = rng.randint(-2, 2)
+    k = rng.randint(-4, 4)
+    b = -2 * a * h
+    c = a * h * h + k
+    x_values = [h - 1, h, h + 1]
+    y_values = [a * x * x + b * x + c for x in x_values]
+    prompt = f"Cho parabol $y={poly_text(a, b, c)}$. Trong bảng giá trị với $x={x_values[0]}, {x_values[1]}, {x_values[2]}$, giá trị $y$ tương ứng là"
+    answer = "; ".join(str(v) for v in y_values)
+    distractors = [
+        "; ".join(str(v + 1) for v in y_values),
+        "; ".join(str(-v) for v in y_values),
+        "; ".join(str(v) for v in reversed(y_values)),
+    ]
+    explanation = "Thay lần lượt từng giá trị x vào công thức hàm số để lập bảng giá trị của parabol."
+    return make_mcq(rng, "hsbh_ve_do_thi_bang_gia_tri", prompt, answer, distractors, explanation)
+
+
+def gen_quadratic_parameter_monotonic_question(rng: random.Random, qtype: str) -> Question:
+    h = rng.randint(-3, 3)
+    direction = rng.choice(["đồng biến", "nghịch biến"])
+    side = rng.choice(["phải", "trái"])
+    interval = f"$({h}; +\\infty)$" if side == "phải" else f"$(-\\infty; {h})$"
+    prompt = f"Cho hàm số $y=(m-1)(x-{h})^2+{rng.randint(-5, 5)}$. Tìm điều kiện của $m$ để hàm số {direction} trên khoảng {interval}."
+    if (direction == "đồng biến" and side == "phải") or (direction == "nghịch biến" and side == "trái"):
+        answer = "$m>1$"
+        explanation = "Với $m-1>0$, parabol quay lên: nghịch biến bên trái trục đối xứng và đồng biến bên phải trục đối xứng."
+    else:
+        answer = "$m<1$"
+        explanation = "Với $m-1<0$, parabol quay xuống: đồng biến bên trái trục đối xứng và nghịch biến bên phải trục đối xứng."
+    distractors = ["$m>1$", "$m<1$", "$m=1$", "$m\\ne 1$"]
+    return make_mcq(rng, "hsbh_tham_so_don_dieu", prompt, answer, distractors, explanation)
 
 
 def gen_intersection_question(rng: random.Random, qtype: str) -> Question:
@@ -638,12 +755,37 @@ def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
         prompt = f"Hàm số $y=\\frac{{1}}{{{linear_text(a, b)}}}$ không xác định tại $x=x_0$. Tính $x_0$."
         answer = decimal_comma(x0)
         explanation = f"Mẫu số bằng 0 khi ${linear_text(a, b)}=0$, suy ra $x_0={x0}$."
+    elif topic == "hs_txd_tham_so":
+        m = rng.randint(-5, 5)
+        prompt = f"Hàm số $y=\\frac{{1}}{{x-m}}$ có tập xác định $\\mathbb{{R}}\\setminus\\{{{m}\\}}$. Tính $m$."
+        answer = decimal_comma(m)
+        explanation = f"Giá trị bị loại khỏi tập xác định chính là nghiệm của mẫu $x-m=0$, nên $m={m}$."
     elif topic == "hs_don_dieu":
         a = rng.choice([1, 2, 3, -1, -2, -3])
         b = rng.randint(-6, 6)
         prompt = f"Cho hàm số $y={linear_text(a, b)}$. Tính hệ số góc của đường thẳng."
         answer = decimal_comma(a)
         explanation = f"Hệ số góc của hàm số bậc nhất là hệ số của $x$, bằng {a}."
+    elif topic == "hs_don_dieu_tham_so":
+        threshold = rng.randint(-3, 4)
+        prompt = f"Hàm số $y=(m {(-threshold):+d})x+1$ đồng biến trên $\\mathbb{{R}}$ khi $m>a$. Tính $a$."
+        answer = decimal_comma(threshold)
+        explanation = f"Đồng biến khi hệ số góc dương: $m {(-threshold):+d}>0$, suy ra $m>{threshold}$."
+    elif topic == "hs_bang_du_lieu_thuc_te":
+        minute = rng.choice([6, 10, 18, 28])
+        price = 5000 if minute <= 8 else 5500 if minute <= 15 else 6000 if minute <= 25 else 6500
+        prompt = f"Theo bảng cước: không quá 8 phút 5000; phút 9-15 là 5500; phút 16-25 là 6000; từ phút 26 là 6500. Cuộc gọi {minute} phút có giá cước mỗi phút là bao nhiêu?"
+        answer = decimal_comma(price)
+        explanation = f"{minute} phút thuộc khoảng tương ứng nên giá cước là {price} đồng/phút."
+    elif topic == "hsbh_xac_dinh_ham_so":
+        a = rng.choice([1, 2, -1, -2])
+        h = rng.randint(-3, 3)
+        k = rng.randint(-5, 5)
+        b = -2 * a * h
+        c = a * h * h + k
+        prompt = f"Cho hàm số bậc hai $y=ax^2+bx+c$ có đỉnh $I({h}; {k})$. Tính hệ số $b$ nếu hệ số $a={a}$."
+        answer = decimal_comma(b)
+        explanation = f"Hoành độ đỉnh $h=-\\frac{{b}}{{2a}}$, nên $b=-2ah={b}$."
     elif topic == "hsbh_don_dieu_cuc_tri":
         a = rng.choice([1, 2, -1, -2])
         h = rng.randint(-4, 4)
@@ -653,6 +795,22 @@ def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
         prompt = f"Cho hàm số $y={poly_text(a, b, c)}$. Tính giá trị cực trị của hàm số."
         answer = decimal_comma(k)
         explanation = f"Đỉnh parabol là $I({h}; {k})$, nên giá trị cực trị bằng {k}."
+    elif topic == "hsbh_ve_do_thi_bang_gia_tri":
+        a = rng.choice([1, -1, 2, -2])
+        h = rng.randint(-2, 2)
+        k = rng.randint(-4, 4)
+        b = -2 * a * h
+        c = a * h * h + k
+        x0 = h + rng.choice([-1, 1])
+        y0 = a * x0 * x0 + b * x0 + c
+        prompt = f"Cho parabol $y={poly_text(a, b, c)}$. Khi lập bảng giá trị, tính giá trị $y$ tại $x={x0}$."
+        answer = decimal_comma(y0)
+        explanation = f"Thay $x={x0}$ vào hàm số được $y={y0}$."
+    elif topic == "hsbh_tham_so_don_dieu":
+        h = rng.randint(-3, 3)
+        prompt = f"Cho hàm số $y=(m-1)(x-{h})^2+2$. Hàm số đồng biến trên $({h};+\\infty)$ khi $m>a$. Tính $a$."
+        answer = "1"
+        explanation = "Muốn parabol đồng biến bên phải trục đối xứng thì hệ số của $(x-h)^2$ phải dương: $m-1>0$, suy ra $m>1$."
     elif topic == "hsbh_thuc_te":
         h = rng.randint(2, 6)
         k = rng.randint(20, 80)
@@ -742,10 +900,16 @@ GENERATORS: dict[str, Callable[[random.Random, str], Question]] = {
     "hs_tinh_gia_tri": gen_value_question,
     "hs_diem_thuoc_do_thi": gen_point_membership_question,
     "hs_tap_xac_dinh": gen_domain_question,
+    "hs_txd_tham_so": gen_domain_parameter_question,
     "hs_don_dieu": gen_monotonic_question,
+    "hs_don_dieu_tham_so": gen_monotonic_parameter_question,
+    "hs_bang_du_lieu_thuc_te": gen_table_data_question,
+    "hsbh_xac_dinh_ham_so": gen_quadratic_identify_function_question,
     "hsbh_dinh_truc": gen_vertex_question,
     "hsbh_giao_truc": gen_intersection_question,
     "hsbh_don_dieu_cuc_tri": gen_quadratic_monotonic_extreme_question,
+    "hsbh_ve_do_thi_bang_gia_tri": gen_quadratic_value_table_question,
+    "hsbh_tham_so_don_dieu": gen_quadratic_parameter_monotonic_question,
     "hsbh_thuc_te": gen_quadratic_realworld_question,
     "tt_xet_dau": gen_sign_question,
     "tt_giai_bpt": gen_inequality_question,
