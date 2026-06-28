@@ -1,14 +1,19 @@
 # AI Quiz Chương 6 - Toán 10 Kết nối tri thức
 
-Ứng dụng Streamlit giúp giáo viên tạo bài tập online cho Chương 6: Hàm số, đồ thị và ứng dụng.
+Ứng dụng Streamlit giúp giáo viên tạo bài tập online cho Toán 10, hiện hỗ trợ Chương 6 và Chương 9.
 
 ## Chức năng
 
-- Giáo viên chọn theo 2 tầng: `Chọn bài` rồi `Dạng cụ thể`.
+- Giáo viên chọn theo 3 tầng: `Chọn chương`, `Chọn bài`, rồi `Dạng cụ thể`.
   - Bài 15: tính giá trị, điểm thuộc đồ thị, tập xác định, tập xác định chứa tham số, đồng biến/nghịch biến, đồng biến/nghịch biến chứa tham số, bảng dữ liệu thực tế.
   - Bài 16: xác định hàm số bậc hai, đỉnh/trục đối xứng, giao điểm với trục, cực trị/đơn điệu, bảng giá trị/đồ thị, tham số đơn điệu, bài toán thực tế.
   - Bài 17: xét dấu tam thức, giải bất phương trình, tham số để tam thức không đổi dấu.
   - Bài 18: phương trình dạng `√f(x)=g(x)`, `√f(x)=√g(x)`, phương trình trùng phương.
+- Chương 9: phương pháp tọa độ trong mặt phẳng.
+  - Tọa độ vectơ: tọa độ trên trục, tọa độ điểm/vectơ trên hệ trục, phép toán vectơ, trung điểm/trọng tâm.
+  - Đường thẳng: phương trình tham số, phương trình tổng quát, vị trí tương đối.
+  - Đường tròn: tâm/bán kính, viết phương trình, tiếp tuyến/vị trí tương đối.
+  - Conic: elip, hypebol, parabol.
 - Chọn số câu và loại câu hỏi:
   - Trắc nghiệm 4 lựa chọn
   - Đúng/Sai 4 ý a), b), c), d)

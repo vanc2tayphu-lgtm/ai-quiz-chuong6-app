@@ -9,9 +9,11 @@ import requests
 import streamlit as st
 
 from question_bank import (
+    CHAPTERS,
     LESSONS,
     QUESTION_TYPES,
     TOPICS,
+    TOPIC_TO_CHAPTER,
     TOPIC_TO_LESSON,
     assignment_payload,
     decode_payload,
@@ -21,7 +23,7 @@ from question_bank import (
 )
 
 
-st.set_page_config(page_title="AI Quiz Chương 6 Toán 10", page_icon="AI", layout="wide")
+st.set_page_config(page_title="AI Quiz Toán 10", page_icon="AI", layout="wide")
 
 
 def apply_mobile_css() -> None:
@@ -238,6 +240,11 @@ def lesson_label_for_topic(topic: str) -> str:
     return LESSONS.get(lesson_key, {}).get("label", "")
 
 
+def chapter_label_for_topic(topic: str) -> str:
+    chapter_key = TOPIC_TO_CHAPTER.get(topic, "")
+    return CHAPTERS.get(chapter_key, {}).get("label", "")
+
+
 def remember_gas_url(gas_url: str) -> None:
     if not gas_url.strip():
         return
@@ -426,7 +433,7 @@ def build_docx_bytes(payload: dict, questions: list) -> bytes:
 
     subtitle = doc.add_paragraph()
     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    subtitle.add_run(f"{lesson_label_for_topic(payload['topic'])} | {TOPICS[payload['topic']]}").bold = True
+    subtitle.add_run(f"{chapter_label_for_topic(payload['topic'])} | {lesson_label_for_topic(payload['topic'])} | {TOPICS[payload['topic']]}").bold = True
 
     meta = doc.add_paragraph()
     meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -492,8 +499,8 @@ def teacher_page() -> None:
     st.markdown(
         """
         <div class="app-hero">
-            <h1>Tạo bài tập online Chương 6 - Toán 10</h1>
-            <p>Chọn dạng toán, loại câu hỏi và số câu; app sinh đề, tạo link làm bài trên điện thoại và gửi kết quả về Google Sheet.</p>
+            <h1>Tạo bài tập online Toán 10</h1>
+            <p>Chọn chương, bài học, dạng toán và loại câu hỏi; app sinh đề, tạo link làm bài trên điện thoại và gửi kết quả về Google Sheet.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -509,9 +516,11 @@ def teacher_page() -> None:
             left, right = st.columns([1.1, 0.9], gap="large")
             with left:
                 st.subheader("Thông tin đề")
-                title = st.text_input("Tên bài tập", "Luyện tập Chương 6 - Toán 10")
+                title = st.text_input("Tên bài tập", "Luyện tập Toán 10")
                 teacher = st.text_input("Tên giáo viên", "")
-                lesson_keys = list(LESSONS)
+                chapter_keys = list(CHAPTERS)
+                chapter = st.selectbox("Chọn chương", chapter_keys, format_func=lambda k: CHAPTERS[k]["label"])
+                lesson_keys = CHAPTERS[chapter]["lessons"]
                 lesson = st.selectbox("Chọn bài", lesson_keys, format_func=lambda k: LESSONS[k]["label"])
                 topic_options = LESSONS[lesson]["topics"]
                 topic = st.selectbox("Dạng cụ thể", topic_options, format_func=lambda k: TOPICS[k])
@@ -538,15 +547,15 @@ def teacher_page() -> None:
         questions = generate_questions(payload["topic"], payload["qtype"], payload["count"], payload["seed"])
         token = encode_payload(payload)
         student_link = app_url_with_payload(token)
+        chapter_label = chapter_label_for_topic(payload["topic"])
         lesson_label = lesson_label_for_topic(payload["topic"])
 
         st.markdown(
             f"""
             <div class="quiz-meta-grid">
-                <div class="quiz-meta-item"><span>Bài học</span><strong>{lesson_label or "Chương 6"}</strong></div>
+                <div class="quiz-meta-item"><span>Chương</span><strong>{chapter_label or "Toán 10"}</strong></div>
+                <div class="quiz-meta-item"><span>Bài học</span><strong>{lesson_label or "Bài học"}</strong></div>
                 <div class="quiz-meta-item"><span>Dạng cụ thể</span><strong>{TOPICS[payload['topic']]}</strong></div>
-                <div class="quiz-meta-item"><span>Số câu</span><strong>{payload['count']}</strong></div>
-                <div class="quiz-meta-item"><span>Mã đề</span><strong>{payload['seed']}</strong></div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -575,7 +584,7 @@ def teacher_page() -> None:
                 st.download_button(
                     "Tải JSON",
                     data=json_data,
-                    file_name=f"bai-tap-chuong-6-{payload['assignment_id']}.json",
+                    file_name=f"bai-tap-toan-10-{payload['assignment_id']}.json",
                     mime="application/json",
                     use_container_width=True,
                 )
@@ -584,7 +593,7 @@ def teacher_page() -> None:
                     st.download_button(
                         "Tải đề Word (.docx)",
                         data=docx_data,
-                        file_name=f"de-chuong-6-{payload['assignment_id']}.docx",
+                        file_name=f"de-toan-10-{payload['assignment_id']}.docx",
                         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                         use_container_width=True,
                     )
@@ -636,7 +645,7 @@ def student_page(payload: dict) -> None:
         f"""
         <div class="app-hero">
             <h1>{payload["title"]}</h1>
-            <p>Mã bài: <b>{payload['assignment_id']}</b> &nbsp;|&nbsp; Bài: <b>{lesson_label_for_topic(payload['topic']) or 'Chương 6'}</b> &nbsp;|&nbsp; Dạng: <b>{TOPICS[payload['topic']]}</b> &nbsp;|&nbsp; Số câu: <b>{payload['count']}</b></p>
+            <p>Mã bài: <b>{payload['assignment_id']}</b> &nbsp;|&nbsp; Chương: <b>{chapter_label_for_topic(payload['topic']) or 'Toán 10'}</b> &nbsp;|&nbsp; Bài: <b>{lesson_label_for_topic(payload['topic']) or 'Bài học'}</b> &nbsp;|&nbsp; Dạng: <b>{TOPICS[payload['topic']]}</b> &nbsp;|&nbsp; Số câu: <b>{payload['count']}</b></p>
         </div>
         """,
         unsafe_allow_html=True,

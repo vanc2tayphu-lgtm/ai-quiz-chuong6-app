@@ -55,6 +55,65 @@ LESSONS = {
             "pt_trung_phuong",
         ],
     },
+    "bai_c9_1_toa_do_vector": {
+        "label": "Bài 1. Tọa độ vectơ trong mặt phẳng",
+        "description": "Tọa độ điểm, tọa độ vectơ, trung điểm, trọng tâm và phép toán vectơ.",
+        "topics": [
+            "c9_vec_toa_do_tren_truc",
+            "c9_vec_toa_do_he_truc",
+            "c9_vec_phep_toan",
+            "c9_vec_trung_diem_trong_tam",
+        ],
+    },
+    "bai_c9_2_duong_thang": {
+        "label": "Bài 2. Phương trình đường thẳng",
+        "description": "Vectơ chỉ phương, vectơ pháp tuyến, phương trình tham số, tổng quát và vị trí tương đối.",
+        "topics": [
+            "c9_line_phuong_trinh_tham_so",
+            "c9_line_phuong_trinh_tong_quat",
+            "c9_line_vi_tri_tuong_doi",
+        ],
+    },
+    "bai_c9_3_duong_tron": {
+        "label": "Bài 3. Phương trình đường tròn",
+        "description": "Nhận diện đường tròn, tìm tâm bán kính, viết phương trình và tiếp tuyến.",
+        "topics": [
+            "c9_circle_tam_ban_kinh",
+            "c9_circle_viet_phuong_trinh",
+            "c9_circle_tiep_tuyen_vi_tri",
+        ],
+    },
+    "bai_c9_4_conic": {
+        "label": "Bài 4. Ba đường conic",
+        "description": "Phương trình chính tắc và các yếu tố của elip, hypebol, parabol.",
+        "topics": [
+            "c9_conic_elip",
+            "c9_conic_hypebol",
+            "c9_conic_parabol",
+        ],
+    },
+}
+
+
+CHAPTERS = {
+    "chuong6": {
+        "label": "Chương 6. Hàm số, đồ thị và ứng dụng",
+        "lessons": [
+            "bai15_ham_so",
+            "bai16_ham_so_bac_hai",
+            "bai17_dau_tam_thuc",
+            "bai18_pt_quy_bac_hai",
+        ],
+    },
+    "chuong9": {
+        "label": "Chương 9. Phương pháp tọa độ trong mặt phẳng",
+        "lessons": [
+            "bai_c9_1_toa_do_vector",
+            "bai_c9_2_duong_thang",
+            "bai_c9_3_duong_tron",
+            "bai_c9_4_conic",
+        ],
+    },
 }
 
 
@@ -79,6 +138,19 @@ TOPICS = {
     "pt_can_bang_g": "Giải phương trình dạng √f(x) = g(x)",
     "pt_can_bang_can": "Giải phương trình dạng √f(x) = √g(x)",
     "pt_trung_phuong": "Giải phương trình trùng phương",
+    "c9_vec_toa_do_tren_truc": "Tọa độ trên trục",
+    "c9_vec_toa_do_he_truc": "Tọa độ điểm và vectơ trên hệ trục",
+    "c9_vec_phep_toan": "Phép toán vectơ, độ dài và tích vô hướng",
+    "c9_vec_trung_diem_trong_tam": "Tọa độ trung điểm và trọng tâm",
+    "c9_line_phuong_trinh_tham_so": "Phương trình tham số của đường thẳng",
+    "c9_line_phuong_trinh_tong_quat": "Phương trình tổng quát của đường thẳng",
+    "c9_line_vi_tri_tuong_doi": "Vị trí tương đối của hai đường thẳng",
+    "c9_circle_tam_ban_kinh": "Nhận diện đường tròn, tìm tâm và bán kính",
+    "c9_circle_viet_phuong_trinh": "Viết phương trình đường tròn",
+    "c9_circle_tiep_tuyen_vi_tri": "Tiếp tuyến và vị trí tương đối với đường tròn",
+    "c9_conic_elip": "Phương trình và yếu tố của elip",
+    "c9_conic_hypebol": "Phương trình và yếu tố của hypebol",
+    "c9_conic_parabol": "Phương trình và yếu tố của parabol",
     # Các khóa cũ được giữ để những link đã tạo trước đây vẫn mở được.
     "ham_so_gia_tri": "Bài 15 - Hàm số: tính giá trị, xét điểm thuộc đồ thị",
     "ham_so_bac_hai_dinh": "Bài 16 - Hàm số bậc hai: đỉnh, trục đối xứng",
@@ -93,6 +165,19 @@ TOPIC_TO_LESSON = {
     topic: lesson_key
     for lesson_key, lesson in LESSONS.items()
     for topic in lesson["topics"]
+}
+
+
+LESSON_TO_CHAPTER = {
+    lesson_key: chapter_key
+    for chapter_key, chapter in CHAPTERS.items()
+    for lesson_key in chapter["lessons"]
+}
+
+
+TOPIC_TO_CHAPTER = {
+    topic: LESSON_TO_CHAPTER.get(lesson_key, "")
+    for topic, lesson_key in TOPIC_TO_LESSON.items()
 }
 
 
@@ -224,6 +309,176 @@ def make_tf(rng: random.Random, topic: str, true_prompt: str, false_prompt: str,
         answer="Đúng" if is_true else "Sai",
         explanation=explanation_true if is_true else explanation_false,
     )
+
+
+def point_text(x: int, y: int) -> str:
+    return f"$({x}; {y})$"
+
+
+def vector_text(x: int, y: int) -> str:
+    return f"$({x}; {y})$"
+
+
+def line_general_text(a: int, b: int, c: int) -> str:
+    return f"{a}x {b:+d}y {c:+d}=0"
+
+
+def circle_standard_text(h: int, k: int, r: int) -> str:
+    return f"(x {(-h):+d})^2+(y {(-k):+d})^2={r*r}"
+
+
+def gen_c9_vector_axis_question(rng: random.Random, qtype: str) -> Question:
+    a = rng.randint(-6, 6)
+    b = rng.randint(-6, 6)
+    value = b - a
+    prompt = f"Trên trục tọa độ, cho hai điểm $A({a})$, $B({b})$. Tọa độ của vectơ $\\overrightarrow{{AB}}$ là"
+    answer = str(value)
+    distractors = [str(a - b), str(a + b), str(abs(value)), str(-value)]
+    explanation = f"Trên trục tọa độ, $\\overrightarrow{{AB}}=x_B-x_A={b}-{a}={value}$."
+    return make_mcq(rng, "c9_vec_toa_do_tren_truc", prompt, answer, distractors, explanation)
+
+
+def gen_c9_vector_coordinate_question(rng: random.Random, qtype: str) -> Question:
+    ax, ay = rng.randint(-5, 4), rng.randint(-5, 4)
+    ux, uy = rng.randint(-4, 4), rng.randint(-4, 4)
+    if ux == 0 and uy == 0:
+        ux = 2
+    bx, by = ax + ux, ay + uy
+    prompt = f"Trong mặt phẳng $Oxy$, cho $A{point_text(ax, ay)}$ và $B{point_text(bx, by)}$. Tọa độ vectơ $\\overrightarrow{{AB}}$ là"
+    answer = vector_text(ux, uy)
+    distractors = [vector_text(-ux, -uy), vector_text(ax + bx, ay + by), vector_text(uy, ux), vector_text(abs(ux), abs(uy))]
+    explanation = f"$\\overrightarrow{{AB}}=(x_B-x_A; y_B-y_A)=({bx}-{ax}; {by}-{ay})={answer}$."
+    return make_mcq(rng, "c9_vec_toa_do_he_truc", prompt, answer, distractors, explanation)
+
+
+def gen_c9_vector_operation_question(rng: random.Random, qtype: str) -> Question:
+    ux, uy = rng.randint(-4, 4), rng.randint(-4, 4)
+    vx, vy = rng.randint(-4, 4), rng.randint(-4, 4)
+    if ux == uy == 0:
+        ux = 1
+    if vx == vy == 0:
+        vy = 2
+    dot = ux * vx + uy * vy
+    prompt = f"Cho hai vectơ $\\vec u={vector_text(ux, uy)}$ và $\\vec v={vector_text(vx, vy)}$. Tính tích vô hướng $\\vec u\\cdot\\vec v$."
+    answer = str(dot)
+    distractors = [str(ux * vy + uy * vx), str(ux + vx + uy + vy), str(-dot), str(abs(dot))]
+    explanation = f"$\\vec u\\cdot\\vec v={ux}\\cdot {vx}+{uy}\\cdot {vy}={dot}$."
+    return make_mcq(rng, "c9_vec_phep_toan", prompt, answer, distractors, explanation)
+
+
+def gen_c9_midpoint_centroid_question(rng: random.Random, qtype: str) -> Question:
+    ax, ay = rng.randint(-6, 2), rng.randint(-6, 2)
+    bx, by = ax + 2 * rng.randint(1, 5), ay + 2 * rng.randint(1, 5)
+    mx, my = (ax + bx) // 2, (ay + by) // 2
+    prompt = f"Cho $A{point_text(ax, ay)}$ và $B{point_text(bx, by)}$. Tọa độ trung điểm $M$ của đoạn thẳng $AB$ là"
+    answer = point_text(mx, my)
+    distractors = [point_text(ax + bx, ay + by), point_text(bx - ax, by - ay), point_text(-mx, my), point_text(mx, -my)]
+    explanation = f"$M\\left(\\frac{{x_A+x_B}}{{2}};\\frac{{y_A+y_B}}{{2}}\\right)={answer}$."
+    return make_mcq(rng, "c9_vec_trung_diem_trong_tam", prompt, answer, distractors, explanation)
+
+
+def gen_c9_line_param_question(rng: random.Random, qtype: str) -> Question:
+    x0, y0 = rng.randint(-5, 5), rng.randint(-5, 5)
+    ux, uy = rng.choice([-3, -2, -1, 1, 2, 3]), rng.choice([-3, -2, -1, 1, 2, 3])
+    prompt = f"Viết phương trình tham số của đường thẳng đi qua $M{point_text(x0, y0)}$ và có vectơ chỉ phương $\\vec u={vector_text(ux, uy)}$."
+    answer = f"$\\begin{{cases}}x={x0}{ux:+d}t\\\\y={y0}{uy:+d}t\\end{{cases}}$"
+    distractors = [
+        f"$\\begin{{cases}}x={x0}{uy:+d}t\\\\y={y0}{ux:+d}t\\end{{cases}}$",
+        f"$\\begin{{cases}}x={ux}{x0:+d}t\\\\y={uy}{y0:+d}t\\end{{cases}}$",
+        f"${line_general_text(ux, uy, -(ux*x0+uy*y0))}$",
+    ]
+    explanation = "Đường thẳng qua $M(x_0;y_0)$ có VTCP $(u_1;u_2)$ có phương trình tham số $x=x_0+u_1t, y=y_0+u_2t$."
+    return make_mcq(rng, "c9_line_phuong_trinh_tham_so", prompt, answer, distractors, explanation)
+
+
+def gen_c9_line_general_question(rng: random.Random, qtype: str) -> Question:
+    x0, y0 = rng.randint(-5, 5), rng.randint(-5, 5)
+    a, b = rng.choice([-4, -3, -2, -1, 1, 2, 3, 4]), rng.choice([-4, -3, -2, -1, 1, 2, 3, 4])
+    c = -(a * x0 + b * y0)
+    prompt = f"Viết phương trình tổng quát của đường thẳng đi qua $M{point_text(x0, y0)}$ và có vectơ pháp tuyến $\\vec n={vector_text(a, b)}$."
+    answer = f"${line_general_text(a, b, c)}$"
+    distractors = [f"${line_general_text(b, a, c)}$", f"${line_general_text(a, b, -c)}$", f"${line_general_text(-b, a, b*x0-a*y0)}$"]
+    explanation = f"Phương trình có dạng $a(x-x_0)+b(y-y_0)=0$, suy ra {answer}."
+    return make_mcq(rng, "c9_line_phuong_trinh_tong_quat", prompt, answer, distractors, explanation)
+
+
+def gen_c9_line_relative_question(rng: random.Random, qtype: str) -> Question:
+    a, b = rng.choice([1, 2, 3, -1, -2]), rng.choice([1, 2, -1, -2, 3])
+    c1 = rng.randint(-8, 8)
+    relation = rng.choice(["parallel", "intersect"])
+    if relation == "parallel":
+        c2 = c1 + rng.choice([2, 3, 4, -2, -3])
+        line2 = (a, b, c2)
+        answer = "Song song"
+        explanation = "Hai đường thẳng có cặp hệ số $a,b$ tỉ lệ nhưng hệ số tự do không tỉ lệ cùng cách nên song song."
+    else:
+        line2 = (b, -a, rng.randint(-8, 8))
+        answer = "Cắt nhau"
+        explanation = "Hai vectơ pháp tuyến không cùng phương nên hai đường thẳng cắt nhau."
+    prompt = f"Xét vị trí tương đối của hai đường thẳng $d_1:{line_general_text(a,b,c1)}$ và $d_2:{line_general_text(*line2)}$."
+    distractors = ["Trùng nhau", "Vuông góc", "Song song", "Cắt nhau"]
+    return make_mcq(rng, "c9_line_vi_tri_tuong_doi", prompt, answer, distractors, explanation)
+
+
+def gen_c9_circle_center_radius_question(rng: random.Random, qtype: str) -> Question:
+    h, k, r = rng.randint(-5, 5), rng.randint(-5, 5), rng.randint(1, 6)
+    prompt = f"Đường tròn $(C): {circle_standard_text(h, k, r)}$ có tâm và bán kính là"
+    answer = f"$I{point_text(h, k)}, R={r}$"
+    distractors = [f"$I{point_text(-h, -k)}, R={r}$", f"$I{point_text(h, k)}, R={r*r}$", f"$I{point_text(-h, k)}, R={r}$"]
+    explanation = f"Phương trình chuẩn $(x-a)^2+(y-b)^2=R^2$ có tâm $I(a;b)$ và bán kính $R$."
+    return make_mcq(rng, "c9_circle_tam_ban_kinh", prompt, answer, distractors, explanation)
+
+
+def gen_c9_circle_equation_question(rng: random.Random, qtype: str) -> Question:
+    h, k, r = rng.randint(-5, 5), rng.randint(-5, 5), rng.randint(1, 6)
+    prompt = f"Viết phương trình đường tròn có tâm $I{point_text(h, k)}$ và bán kính $R={r}$."
+    answer = f"${circle_standard_text(h, k, r)}$"
+    distractors = [f"${circle_standard_text(-h, -k, r)}$", f"${circle_standard_text(h, k, r*r)}$", f"$(x {h:+d})^2+(y {k:+d})^2={r}$"]
+    explanation = f"Đường tròn tâm $I(a;b)$, bán kính $R$ có phương trình $(x-a)^2+(y-b)^2=R^2$."
+    return make_mcq(rng, "c9_circle_viet_phuong_trinh", prompt, answer, distractors, explanation)
+
+
+def gen_c9_circle_tangent_question(rng: random.Random, qtype: str) -> Question:
+    h, k, r = rng.randint(-4, 4), rng.randint(-4, 4), rng.randint(1, 5)
+    y_tangent = k + r
+    prompt = f"Cho đường tròn tâm $I{point_text(h, k)}$, bán kính $R={r}$. Đường thẳng nào sau đây là một tiếp tuyến của đường tròn?"
+    answer = f"$y={y_tangent}$"
+    distractors = [f"$y={k}$", f"$x={h}$", f"$y={k + r + 1}$", f"$x={h + r + 1}$"]
+    explanation = f"Khoảng cách từ tâm $I$ đến đường thẳng $y={y_tangent}$ bằng $|{y_tangent}-{k}|={r}$ nên đó là tiếp tuyến."
+    return make_mcq(rng, "c9_circle_tiep_tuyen_vi_tri", prompt, answer, distractors, explanation)
+
+
+def gen_c9_ellipse_question(rng: random.Random, qtype: str) -> Question:
+    a = rng.choice([5, 6, 7])
+    b = rng.choice([3, 4])
+    if b >= a:
+        b = a - 2
+    c2 = a * a - b * b
+    prompt = f"Cho elip $(E): \\frac{{x^2}}{{{a*a}}}+\\frac{{y^2}}{{{b*b}}}=1$. Giá trị $c^2$ của elip bằng"
+    answer = str(c2)
+    distractors = [str(a*a + b*b), str(a - b), str(a*a), str(b*b)]
+    explanation = f"Với elip, $c^2=a^2-b^2={a*a}-{b*b}={c2}$."
+    return make_mcq(rng, "c9_conic_elip", prompt, answer, distractors, explanation)
+
+
+def gen_c9_hyperbola_question(rng: random.Random, qtype: str) -> Question:
+    a = rng.choice([3, 4, 5])
+    b = rng.choice([2, 3, 4])
+    c2 = a * a + b * b
+    prompt = f"Cho hypebol $(H): \\frac{{x^2}}{{{a*a}}}-\\frac{{y^2}}{{{b*b}}}=1$. Giá trị $c^2$ của hypebol bằng"
+    answer = str(c2)
+    distractors = [str(abs(a*a - b*b)), str(a*a), str(b*b), str(2*c2)]
+    explanation = f"Với hypebol, $c^2=a^2+b^2={a*a}+{b*b}={c2}$."
+    return make_mcq(rng, "c9_conic_hypebol", prompt, answer, distractors, explanation)
+
+
+def gen_c9_parabola_conic_question(rng: random.Random, qtype: str) -> Question:
+    p = rng.randint(1, 6)
+    prompt = f"Cho parabol $(P): y^2={2*p}x$. Tham số tiêu $p$ bằng"
+    answer = str(p)
+    distractors = [str(2*p), str(p*p), str(-p), str(p+1)]
+    explanation = f"Phương trình chính tắc $y^2=2px$, nên $2p={2*p}$ và $p={p}$."
+    return make_mcq(rng, "c9_conic_parabol", prompt, answer, distractors, explanation)
 
 
 def gen_value_question(rng: random.Random, qtype: str) -> Question:
@@ -658,6 +913,56 @@ def decimal_comma(value: int | float | Fraction) -> str:
 
 
 def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
+    if topic.startswith("c9_vec"):
+        ax, ay = rng.randint(-4, 2), rng.randint(-4, 2)
+        bx, by = ax + rng.randint(1, 5), ay + rng.randint(1, 5)
+        ux, uy = bx - ax, by - ay
+        mx, my = Fraction(ax + bx, 2), Fraction(ay + by, 2)
+        dot = ax * bx + ay * by
+        prompt = f"Trong mặt phẳng $Oxy$, cho $A{point_text(ax, ay)}$, $B{point_text(bx, by)}$. Xét tính đúng sai của các mệnh đề sau:"
+        statements = [
+            make_statement("a", f"$\\overrightarrow{{AB}}={vector_text(ux, uy)}$.", True, "Lấy tọa độ điểm cuối trừ tọa độ điểm đầu."),
+            make_statement("b", f"Trung điểm của $AB$ là $M({frac_text(mx)}; {frac_text(my)})$.", True, "Dùng công thức trung điểm."),
+            make_statement("c", f"$\\overrightarrow{{OA}}\\cdot\\overrightarrow{{OB}}={dot}$.", True, "Tích vô hướng bằng tích các hoành độ cộng tích các tung độ."),
+            make_statement("d", f"$\\overrightarrow{{AB}}={vector_text(-ux, -uy)}$.", False, "Vectơ này là $\\overrightarrow{BA}$, không phải $\\overrightarrow{AB}$."),
+        ]
+        return make_true_false_group(topic, prompt, statements)
+
+    if topic.startswith("c9_line"):
+        x0, y0 = rng.randint(-4, 4), rng.randint(-4, 4)
+        a, b = rng.choice([1, 2, -1, -2, 3]), rng.choice([1, -1, 2, -2])
+        c = -(a * x0 + b * y0)
+        prompt = f"Cho đường thẳng $d:{line_general_text(a, b, c)}$. Xét tính đúng sai của các mệnh đề sau:"
+        statements = [
+            make_statement("a", f"Một vectơ pháp tuyến của $d$ là $\\vec n={vector_text(a, b)}$.", True, "Với $ax+by+c=0$, VTPT là $(a;b)$."),
+            make_statement("b", f"Một vectơ chỉ phương của $d$ là $\\vec u={vector_text(b, -a)}$.", True, "VTCP vuông góc với VTPT $(a;b)$ là $(b;-a)$."),
+            make_statement("c", f"Điểm $M{point_text(x0, y0)}$ thuộc đường thẳng $d$.", True, "Thay tọa độ điểm vào phương trình được 0."),
+            make_statement("d", f"Đường thẳng ${line_general_text(a, b, c + 2)}$ trùng với $d$.", False, "Hai đường thẳng có cùng hệ số a,b nhưng hệ số tự do khác nên song song."),
+        ]
+        return make_true_false_group(topic, prompt, statements)
+
+    if topic.startswith("c9_circle"):
+        h, k, r = rng.randint(-4, 4), rng.randint(-4, 4), rng.randint(1, 5)
+        prompt = f"Cho đường tròn $(C): {circle_standard_text(h, k, r)}$. Xét tính đúng sai của các mệnh đề sau:"
+        statements = [
+            make_statement("a", f"Tâm của $(C)$ là $I{point_text(h, k)}$.", True, "Đọc từ phương trình chuẩn của đường tròn."),
+            make_statement("b", f"Bán kính của $(C)$ bằng {r}.", True, "Vế phải bằng $R^2$."),
+            make_statement("c", f"Đường thẳng $y={k+r}$ là một tiếp tuyến của $(C)$.", True, "Khoảng cách từ tâm đến đường thẳng bằng bán kính."),
+            make_statement("d", f"Tâm của $(C)$ là $I{point_text(-h, -k)}$.", False, "Cần đổi dấu đúng theo dạng $(x-a)^2+(y-b)^2=R^2$."),
+        ]
+        return make_true_false_group(topic, prompt, statements)
+
+    if topic.startswith("c9_conic"):
+        a, b = 5, 3
+        prompt = f"Cho elip $(E): \\frac{{x^2}}{{{a*a}}}+\\frac{{y^2}}{{{b*b}}}=1$. Xét tính đúng sai của các mệnh đề sau:"
+        statements = [
+            make_statement("a", f"Bán trục lớn của elip bằng {a}.", True, "Mẫu lớn hơn là $a^2$."),
+            make_statement("b", f"Bán trục nhỏ của elip bằng {b}.", True, "Mẫu nhỏ hơn là $b^2$."),
+            make_statement("c", f"$c^2={a*a-b*b}$.", True, "Với elip, $c^2=a^2-b^2$."),
+            make_statement("d", f"Hai tiêu điểm của elip là $F_1(-{a};0)$ và $F_2({a};0)$.", False, "Tiêu điểm dùng $c$, không dùng $a$."),
+        ]
+        return make_true_false_group(topic, prompt, statements)
+
     if topic == "ham_so_gia_tri":
         a = rng.choice([1, 2, -1, -2])
         b = rng.choice([-4, -3, -2, -1, 1, 2, 3, 4])
@@ -739,7 +1044,83 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
 
 
 def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
-    if topic == "hs_diem_thuoc_do_thi":
+    if topic == "c9_vec_toa_do_tren_truc":
+        a, b = rng.randint(-6, 6), rng.randint(-6, 6)
+        prompt = f"Trên trục tọa độ, cho $A({a})$, $B({b})$. Tính tọa độ của vectơ $\\overrightarrow{{AB}}$."
+        answer = decimal_comma(b - a)
+        explanation = f"$\\overrightarrow{{AB}}={b}-{a}={b-a}$."
+    elif topic == "c9_vec_toa_do_he_truc":
+        ax, ay = rng.randint(-5, 4), rng.randint(-5, 4)
+        ux, uy = rng.randint(-4, 4), rng.randint(-4, 4)
+        if ux == 0 and uy == 0:
+            ux = 2
+        bx, by = ax + ux, ay + uy
+        prompt = f"Cho $A{point_text(ax, ay)}$, $B{point_text(bx, by)}$. Tính hoành độ của vectơ $\\overrightarrow{{AB}}$."
+        answer = decimal_comma(ux)
+        explanation = f"Hoành độ của $\\overrightarrow{{AB}}$ là $x_B-x_A={ux}$."
+    elif topic == "c9_vec_phep_toan":
+        ux, uy = rng.randint(-4, 4), rng.randint(-4, 4)
+        vx, vy = rng.randint(-4, 4), rng.randint(-4, 4)
+        prompt = f"Cho $\\vec u={vector_text(ux, uy)}$, $\\vec v={vector_text(vx, vy)}$. Tính $\\vec u\\cdot\\vec v$."
+        answer = decimal_comma(ux * vx + uy * vy)
+        explanation = f"Tích vô hướng bằng {ux}·{vx}+{uy}·{vy}={ux*vx+uy*vy}."
+    elif topic == "c9_vec_trung_diem_trong_tam":
+        ax, ay = rng.randint(-6, 2), rng.randint(-6, 2)
+        bx, by = ax + 2 * rng.randint(1, 5), ay + 2 * rng.randint(1, 5)
+        prompt = f"Cho $A{point_text(ax, ay)}$, $B{point_text(bx, by)}$. Tính hoành độ trung điểm của $AB$."
+        answer = decimal_comma((ax + bx) // 2)
+        explanation = "Hoành độ trung điểm bằng trung bình cộng hai hoành độ."
+    elif topic == "c9_line_phuong_trinh_tham_so":
+        x0, y0 = rng.randint(-5, 5), rng.randint(-5, 5)
+        ux, uy = rng.choice([-3, -2, -1, 1, 2, 3]), rng.choice([-3, -2, -1, 1, 2, 3])
+        prompt = f"Đường thẳng qua $M{point_text(x0, y0)}$ có VTCP $\\vec u={vector_text(ux, uy)}$. Trong phương trình tham số $x={x0}+at$, tính $a$."
+        answer = decimal_comma(ux)
+        explanation = "Hệ số của $t$ trong phương trình $x$ là hoành độ của vectơ chỉ phương."
+    elif topic == "c9_line_phuong_trinh_tong_quat":
+        x0, y0 = rng.randint(-5, 5), rng.randint(-5, 5)
+        a, b = rng.choice([-3, -2, -1, 1, 2, 3]), rng.choice([-3, -2, -1, 1, 2, 3])
+        c = -(a * x0 + b * y0)
+        prompt = f"Đường thẳng đi qua $M{point_text(x0, y0)}$ có VTPT $\\vec n={vector_text(a, b)}$ và phương trình $ax+by+c=0$. Tính $c$."
+        answer = decimal_comma(c)
+        explanation = f"Thay điểm M vào phương trình: $c=-({a}\\cdot{x0}+{b}\\cdot{y0})={c}$."
+    elif topic == "c9_line_vi_tri_tuong_doi":
+        a, b, c1 = rng.choice([1, 2, -1, -2]), rng.choice([1, -1, 2, -2]), rng.randint(-6, 6)
+        prompt = f"Hai đường thẳng $d_1:{line_general_text(a,b,c1)}$ và $d_2:{line_general_text(a,b,c1+3)}$ song song hay cắt nhau? Nhập 1 nếu song song, 0 nếu cắt nhau."
+        answer = "1"
+        explanation = "Hai đường thẳng có cùng cặp hệ số a,b nhưng hệ số tự do khác nên song song."
+    elif topic == "c9_circle_tam_ban_kinh":
+        h, k, r = rng.randint(-5, 5), rng.randint(-5, 5), rng.randint(1, 6)
+        prompt = f"Đường tròn $(C): {circle_standard_text(h, k, r)}$. Tính bán kính $R$."
+        answer = decimal_comma(r)
+        explanation = f"Vế phải bằng $R^2={r*r}$ nên $R={r}$."
+    elif topic == "c9_circle_viet_phuong_trinh":
+        h, k, r = rng.randint(-5, 5), rng.randint(-5, 5), rng.randint(1, 6)
+        prompt = f"Đường tròn tâm $I{point_text(h, k)}$, bán kính $R={r}$. Tính vế phải $R^2$ trong phương trình chuẩn."
+        answer = decimal_comma(r * r)
+        explanation = f"$R^2={r*r}$."
+    elif topic == "c9_circle_tiep_tuyen_vi_tri":
+        h, k, r = rng.randint(-4, 4), rng.randint(-4, 4), rng.randint(1, 5)
+        prompt = f"Đường tròn tâm $I{point_text(h, k)}$, bán kính {r}. Đường thẳng $y={k+r}$ có là tiếp tuyến không? Nhập 1 nếu có, 0 nếu không."
+        answer = "1"
+        explanation = "Khoảng cách từ tâm đến đường thẳng bằng bán kính."
+    elif topic == "c9_conic_elip":
+        a, b = rng.choice([5, 6, 7]), rng.choice([3, 4])
+        if b >= a:
+            b = a - 2
+        prompt = f"Elip $\\frac{{x^2}}{{{a*a}}}+\\frac{{y^2}}{{{b*b}}}=1$. Tính $c^2$."
+        answer = decimal_comma(a*a - b*b)
+        explanation = f"Với elip, $c^2=a^2-b^2={a*a-b*b}$."
+    elif topic == "c9_conic_hypebol":
+        a, b = rng.choice([3, 4, 5]), rng.choice([2, 3, 4])
+        prompt = f"Hypebol $\\frac{{x^2}}{{{a*a}}}-\\frac{{y^2}}{{{b*b}}}=1$. Tính $c^2$."
+        answer = decimal_comma(a*a + b*b)
+        explanation = f"Với hypebol, $c^2=a^2+b^2={a*a+b*b}$."
+    elif topic == "c9_conic_parabol":
+        p = rng.randint(1, 6)
+        prompt = f"Parabol $y^2={2*p}x$. Tính tham số tiêu $p$."
+        answer = decimal_comma(p)
+        explanation = f"Vì $y^2=2px$ nên $p={p}$."
+    elif topic == "hs_diem_thuoc_do_thi":
         a = rng.choice([1, 2, -1, -2])
         b = rng.randint(-5, 5)
         c = rng.randint(-6, 6)
@@ -917,6 +1298,19 @@ GENERATORS: dict[str, Callable[[random.Random, str], Question]] = {
     "pt_can_bang_g": gen_sqrt_equals_linear_question,
     "pt_can_bang_can": gen_sqrt_equals_sqrt_question,
     "pt_trung_phuong": gen_reducible_equation_question,
+    "c9_vec_toa_do_tren_truc": gen_c9_vector_axis_question,
+    "c9_vec_toa_do_he_truc": gen_c9_vector_coordinate_question,
+    "c9_vec_phep_toan": gen_c9_vector_operation_question,
+    "c9_vec_trung_diem_trong_tam": gen_c9_midpoint_centroid_question,
+    "c9_line_phuong_trinh_tham_so": gen_c9_line_param_question,
+    "c9_line_phuong_trinh_tong_quat": gen_c9_line_general_question,
+    "c9_line_vi_tri_tuong_doi": gen_c9_line_relative_question,
+    "c9_circle_tam_ban_kinh": gen_c9_circle_center_radius_question,
+    "c9_circle_viet_phuong_trinh": gen_c9_circle_equation_question,
+    "c9_circle_tiep_tuyen_vi_tri": gen_c9_circle_tangent_question,
+    "c9_conic_elip": gen_c9_ellipse_question,
+    "c9_conic_hypebol": gen_c9_hyperbola_question,
+    "c9_conic_parabol": gen_c9_parabola_conic_question,
     "ham_so_gia_tri": gen_value_question,
     "ham_so_bac_hai_dinh": gen_vertex_question,
     "ham_so_bac_hai_giao_diem": gen_intersection_question,
@@ -955,6 +1349,7 @@ def assignment_payload(topic: str, qtype: str, count: int, title: str, teacher: 
         "assignment_id": str(uuid.uuid4())[:8],
         "title": title.strip() or "Bài tập Chương 6 - Toán 10",
         "teacher": teacher.strip(),
+        "chapter": TOPIC_TO_CHAPTER.get(topic, ""),
         "lesson": TOPIC_TO_LESSON.get(topic, ""),
         "topic": topic,
         "qtype": qtype,
