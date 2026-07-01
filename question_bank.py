@@ -736,6 +736,7 @@ def gen_c9_circle_line_relative_question(rng: random.Random, qtype: str) -> Ques
         "cắt đường tròn tại hai điểm phân biệt",
         "tiếp xúc với đường tròn",
         "không có điểm chung với đường tròn",
+        "đi qua tâm đường tròn",
     ]
     explanation = "So sánh khoảng cách từ tâm đường tròn đến đường thẳng với bán kính: nhỏ hơn thì cắt, bằng thì tiếp xúc, lớn hơn thì không có điểm chung."
     return make_mcq(rng, "c9_circle_duong_thang_tuong_doi", prompt, answer, distractors, explanation)
