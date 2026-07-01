@@ -88,6 +88,7 @@ LESSONS = {
             "c9_circle_tam_ban_kinh",
             "c9_circle_viet_phuong_trinh",
             "c9_circle_tiep_tuyen_vi_tri",
+            "c9_circle_duong_thang_tuong_doi",
         ],
     },
     "bai_c9_4_conic": {
@@ -164,7 +165,8 @@ TOPICS = {
     "c9_line_khoang_cach": "Khoảng cách từ điểm đến đường thẳng",
     "c9_circle_tam_ban_kinh": "Nhận diện đường tròn, tìm tâm và bán kính",
     "c9_circle_viet_phuong_trinh": "Viết phương trình đường tròn",
-    "c9_circle_tiep_tuyen_vi_tri": "Tiếp tuyến và vị trí tương đối với đường tròn",
+    "c9_circle_tiep_tuyen_vi_tri": "Tiếp tuyến của đường tròn",
+    "c9_circle_duong_thang_tuong_doi": "Vị trí tương đối giữa đường thẳng và đường tròn",
     "c9_conic_elip": "Phương trình và yếu tố của elip",
     "c9_conic_hypebol": "Phương trình và yếu tố của hypebol",
     "c9_conic_parabol": "Phương trình và yếu tố của parabol",
@@ -453,6 +455,67 @@ def circle_standard_text(h: int, k: int, r: int) -> str:
     return f"(x {(-h):+d})^2+(y {(-k):+d})^2={r*r}"
 
 
+def circle_line_at_distance(
+    rng: random.Random,
+    h: int,
+    k: int,
+    distance: int,
+    form: str | None = None,
+) -> tuple[int, int, int]:
+    form = form or rng.choice(["full", "missing_a", "missing_b", "missing_c"])
+    if form == "full":
+        a, b = rng.choice([(3, 4), (4, 3), (-3, 4), (4, -3)])
+        norm = 5
+        candidates = [-(a * h + b * k) + sign * distance * norm for sign in [-1, 1]]
+        rng.shuffle(candidates)
+        return a, b, next((c for c in candidates if c != 0), candidates[0])
+    if form == "missing_a":
+        candidates = [-(k + sign * distance) for sign in [-1, 1]]
+        rng.shuffle(candidates)
+        return 0, 1, next((c for c in candidates if c != 0), candidates[0])
+    if form == "missing_b":
+        candidates = [-(h + sign * distance) for sign in [-1, 1]]
+        rng.shuffle(candidates)
+        return 1, 0, next((c for c in candidates if c != 0), candidates[0])
+    return rng.choice([(3, 4, 0), (4, 3, 0), (-3, 4, 0)])
+
+
+def circle_line_case(rng: random.Random, relation: str | None = None) -> tuple[int, int, int, tuple[int, int, int], str]:
+    relation = relation or rng.choice(["secant", "tangent", "outside"])
+    form = rng.choice(["full", "missing_a", "missing_b", "missing_c"])
+    if form == "missing_c":
+        line = rng.choice([(3, 4, 0), (4, 3, 0), (-3, 4, 0)])
+        a, b, _ = line
+        scale = rng.randint(1, 3)
+        h, k = a * scale, b * scale
+        center_distance = 5 * scale
+        if relation == "secant":
+            r = center_distance + rng.randint(1, 3)
+        elif relation == "tangent":
+            r = center_distance
+        else:
+            r = center_distance - rng.randint(1, min(3, center_distance - 1))
+        return h, k, r, line, relation
+
+    h, k = rng.randint(-4, 4), rng.randint(-4, 4)
+    r = rng.randint(2, 6)
+    if relation == "secant":
+        distance = rng.randint(0, r - 1)
+    elif relation == "tangent":
+        distance = r
+    else:
+        distance = r + rng.randint(1, 4)
+    return h, k, r, circle_line_at_distance(rng, h, k, distance, form), relation
+
+
+def circle_line_relation_text(relation: str) -> str:
+    return {
+        "secant": "cắt đường tròn tại hai điểm phân biệt",
+        "tangent": "tiếp xúc với đường tròn",
+        "outside": "không có điểm chung với đường tròn",
+    }[relation]
+
+
 def gen_c9_vector_axis_question(rng: random.Random, qtype: str) -> Question:
     ax, ay = rng.randint(-5, 4), rng.randint(-5, 4)
     ux, uy = rng.randint(-4, 4), rng.randint(-4, 4)
@@ -647,13 +710,35 @@ def gen_c9_circle_equation_question(rng: random.Random, qtype: str) -> Question:
 
 
 def gen_c9_circle_tangent_question(rng: random.Random, qtype: str) -> Question:
-    h, k, r = rng.randint(-4, 4), rng.randint(-4, 4), rng.randint(1, 5)
-    y_tangent = k + r
+    h, k, r, tangent_line, _ = circle_line_case(rng, "tangent")
     prompt = f"Cho đường tròn tâm $I{point_text(h, k)}$, bán kính $R={r}$. Đường thẳng nào sau đây là một tiếp tuyến của đường tròn?"
-    answer = f"$y={y_tangent}$"
-    distractors = [f"$y={k}$", f"$x={h}$", f"$y={k + r + 1}$", f"$x={h + r + 1}$"]
-    explanation = f"Khoảng cách từ tâm $I$ đến đường thẳng $y={y_tangent}$ bằng $|{y_tangent}-{k}|={r}$ nên đó là tiếp tuyến."
+    answer = f"${line_general_text(*tangent_line)}$"
+    distractor_lines = [
+        circle_line_at_distance(rng, h, k, 0, "missing_a"),
+        circle_line_at_distance(rng, h, k, r + 1, "missing_b"),
+        circle_line_at_distance(rng, h, k, r + 2, "full"),
+        circle_line_at_distance(rng, h, k, max(0, r - 1), "missing_a"),
+    ]
+    distractors = []
+    for line in distractor_lines:
+        option = f"${line_general_text(*line)}$"
+        if option != answer and option not in distractors:
+            distractors.append(option)
+    explanation = f"Khoảng cách từ tâm $I$ đến đường thẳng {answer} bằng bán kính $R={r}$ nên đó là tiếp tuyến."
     return make_mcq(rng, "c9_circle_tiep_tuyen_vi_tri", prompt, answer, distractors, explanation)
+
+
+def gen_c9_circle_line_relative_question(rng: random.Random, qtype: str) -> Question:
+    h, k, r, line, relation = circle_line_case(rng)
+    prompt = f"Cho đường tròn $(C)$ tâm $I{point_text(h, k)}$, bán kính $R={r}$ và đường thẳng $d:{line_general_text(*line)}$. Xét vị trí tương đối giữa $d$ và $(C)$."
+    answer = circle_line_relation_text(relation)
+    distractors = [
+        "cắt đường tròn tại hai điểm phân biệt",
+        "tiếp xúc với đường tròn",
+        "không có điểm chung với đường tròn",
+    ]
+    explanation = "So sánh khoảng cách từ tâm đường tròn đến đường thẳng với bán kính: nhỏ hơn thì cắt, bằng thì tiếp xúc, lớn hơn thì không có điểm chung."
+    return make_mcq(rng, "c9_circle_duong_thang_tuong_doi", prompt, answer, distractors, explanation)
 
 
 def gen_c9_ellipse_question(rng: random.Random, qtype: str) -> Question:
@@ -1207,6 +1292,30 @@ def gen_true_false_group_question(rng: random.Random, topic: str) -> Question:
         ]
         return make_true_false_group(topic, prompt, statements)
 
+    if topic == "c9_circle_tiep_tuyen_vi_tri":
+        h, k, r, tangent_line, _ = circle_line_case(rng, "tangent")
+        secant_line = circle_line_at_distance(rng, h, k, max(0, r - 1), rng.choice(["full", "missing_a", "missing_b"]))
+        outside_line = circle_line_at_distance(rng, h, k, r + 2, rng.choice(["full", "missing_a", "missing_b"]))
+        prompt = f"Cho đường tròn tâm $I{point_text(h, k)}$, bán kính $R={r}$. Xét tính đúng sai của các mệnh đề sau:"
+        statements = [
+            make_statement("a", f"Đường thẳng ${line_general_text(*tangent_line)}$ là một tiếp tuyến của đường tròn.", True, "Khoảng cách từ tâm đến đường thẳng bằng bán kính."),
+            make_statement("b", f"Đường thẳng ${line_general_text(*secant_line)}$ cắt đường tròn tại hai điểm phân biệt.", True, "Khoảng cách từ tâm đến đường thẳng nhỏ hơn bán kính."),
+            make_statement("c", f"Đường thẳng ${line_general_text(*outside_line)}$ không có điểm chung với đường tròn.", True, "Khoảng cách từ tâm đến đường thẳng lớn hơn bán kính."),
+            make_statement("d", f"Mọi đường thẳng đi qua tâm đều là tiếp tuyến của đường tròn.", False, "Đường thẳng đi qua tâm cắt đường tròn tại hai điểm."),
+        ]
+        return make_true_false_group(topic, prompt, statements)
+
+    if topic == "c9_circle_duong_thang_tuong_doi":
+        h, k, r, line, relation = circle_line_case(rng)
+        prompt = f"Cho đường tròn $(C)$ tâm $I{point_text(h, k)}$, bán kính $R={r}$ và đường thẳng $d:{line_general_text(*line)}$. Xét tính đúng sai của các mệnh đề sau:"
+        statements = [
+            make_statement("a", f"Nếu khoảng cách từ tâm $I$ đến $d$ nhỏ hơn $R$ thì $d$ cắt $(C)$ tại hai điểm.", True, "So sánh khoảng cách từ tâm đến đường thẳng với bán kính."),
+            make_statement("b", f"Đường thẳng $d$ {circle_line_relation_text(relation)}.", True, "Quan hệ được xác định bằng cách so sánh khoảng cách từ tâm đến đường thẳng với bán kính."),
+            make_statement("c", f"Nếu khoảng cách từ tâm $I$ đến $d$ bằng $R$ thì $d$ là tiếp tuyến của $(C)$.", True, "Đây là điều kiện tiếp xúc của đường thẳng và đường tròn."),
+            make_statement("d", f"Đường thẳng $d$ luôn cắt $(C)$ tại hai điểm phân biệt.", relation == "secant", "Chỉ đúng khi khoảng cách từ tâm đến đường thẳng nhỏ hơn bán kính."),
+        ]
+        return make_true_false_group(topic, prompt, statements)
+
     if topic.startswith("c9_circle"):
         h, k, r = rng.randint(-4, 4), rng.randint(-4, 4), rng.randint(1, 5)
         prompt = f"Cho đường tròn $(C): {circle_standard_text(h, k, r)}$. Xét tính đúng sai của các mệnh đề sau:"
@@ -1412,10 +1521,15 @@ def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
         answer = decimal_comma(r * r)
         explanation = f"$R^2={r*r}$."
     elif topic == "c9_circle_tiep_tuyen_vi_tri":
-        h, k, r = rng.randint(-4, 4), rng.randint(-4, 4), rng.randint(1, 5)
-        prompt = f"Đường tròn tâm $I{point_text(h, k)}$, bán kính {r}. Đường thẳng $y={k+r}$ có là tiếp tuyến không? Nhập 1 nếu có, 0 nếu không."
+        h, k, r, tangent_line, _ = circle_line_case(rng, "tangent")
+        prompt = f"Đường tròn tâm $I{point_text(h, k)}$, bán kính {r}. Đường thẳng $d:{line_general_text(*tangent_line)}$ có là tiếp tuyến không? Nhập 1 nếu có, 0 nếu không."
         answer = "1"
         explanation = "Khoảng cách từ tâm đến đường thẳng bằng bán kính."
+    elif topic == "c9_circle_duong_thang_tuong_doi":
+        h, k, r, line, relation = circle_line_case(rng)
+        prompt = f"Cho đường tròn tâm $I{point_text(h, k)}$, bán kính {r} và đường thẳng $d:{line_general_text(*line)}$. Nhập 2 nếu cắt tại hai điểm, 1 nếu tiếp xúc, 0 nếu không có điểm chung."
+        answer = {"secant": "2", "tangent": "1", "outside": "0"}[relation]
+        explanation = "So sánh khoảng cách từ tâm đến đường thẳng với bán kính."
     elif topic == "c9_conic_elip":
         a, b = rng.choice([5, 6, 7]), rng.choice([3, 4])
         if b >= a:
@@ -1637,6 +1751,7 @@ GENERATORS: dict[str, Callable[[random.Random, str], Question]] = {
     "c9_circle_tam_ban_kinh": gen_c9_circle_center_radius_question,
     "c9_circle_viet_phuong_trinh": gen_c9_circle_equation_question,
     "c9_circle_tiep_tuyen_vi_tri": gen_c9_circle_tangent_question,
+    "c9_circle_duong_thang_tuong_doi": gen_c9_circle_line_relative_question,
     "c9_conic_elip": gen_c9_ellipse_question,
     "c9_conic_hypebol": gen_c9_hyperbola_question,
     "c9_conic_parabol": gen_c9_parabola_conic_question,
