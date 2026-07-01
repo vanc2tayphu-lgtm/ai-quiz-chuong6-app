@@ -377,6 +377,78 @@ def line_param_text(x0: int, y0: int, ux: int, uy: int) -> str:
     return f"$\\begin{{cases}}x={x0}{param_term(ux)}\\\\y={y0}{param_term(uy)}\\end{{cases}}$"
 
 
+def angle_line_pair(rng: random.Random) -> tuple[str, str, int, str]:
+    mode = rng.choice(["general_full", "general_missing_a", "general_missing_b", "general_missing_c", "parametric"])
+    cases = {
+        "general_full": [((1, 1), (1, -1), 90), ((1, 1), (1, 0), 45), ((1, -1), (0, 1), 45)],
+        "general_missing_a": [((1, 0), (1, 1), 45), ((1, 0), (0, 1), 90)],
+        "general_missing_b": [((0, 1), (1, 1), 45), ((0, 1), (1, 0), 90)],
+        "general_missing_c": [((1, 1), (1, -1), 90), ((1, 1), (1, 0), 45), ((1, -1), (0, 1), 45)],
+        "parametric": [((1, 0), (0, 1), 90), ((1, 1), (1, -1), 90), ((1, 0), (1, 1), 45), ((0, 1), (1, 1), 45)],
+    }
+    u1, u2, angle = rng.choice(cases[mode])
+    if mode == "parametric":
+        p1 = (rng.randint(-3, 3), rng.randint(-3, 3))
+        p2 = (rng.randint(-3, 3), rng.randint(-3, 3))
+        d1 = line_param_text(p1[0], p1[1], u1[0], u1[1])
+        d2 = line_param_text(p2[0], p2[1], u2[0], u2[1])
+        explanation = "Dùng vectơ chỉ phương của hai đường thẳng tham số để tính góc giữa hai đường thẳng."
+        return d1, d2, angle, explanation
+
+    n1 = (u1[1], -u1[0])
+    n2 = (u2[1], -u2[0])
+    if mode == "general_missing_c":
+        c1 = c2 = 0
+    else:
+        while True:
+            p1 = (rng.randint(-3, 3), rng.randint(-3, 3))
+            c1 = -(n1[0] * p1[0] + n1[1] * p1[1])
+            if c1 != 0:
+                break
+        while True:
+            p2 = (rng.randint(-3, 3), rng.randint(-3, 3))
+            c2 = -(n2[0] * p2[0] + n2[1] * p2[1])
+            if c2 != 0:
+                break
+    explanation = "Dùng vectơ pháp tuyến hoặc hệ số góc của hai phương trình tổng quát để tính góc giữa hai đường thẳng."
+    return f"${line_general_text(n1[0], n1[1], c1)}$", f"${line_general_text(n2[0], n2[1], c2)}$", angle, explanation
+
+
+def distance_line_case(rng: random.Random) -> tuple[int, int, tuple[int, int, int], int]:
+    mode = rng.choice(["full", "missing_a", "missing_b", "missing_c"])
+    distance = rng.randint(1, 6)
+    if mode == "full":
+        a, b = rng.choice([(3, 4), (4, 3), (-3, 4), (4, -3)])
+        norm = 5
+        while True:
+            x0, y0 = rng.randint(-4, 4), rng.randint(-4, 4)
+            c = -(a * x0 + b * y0) + rng.choice([-1, 1]) * distance * norm
+            if c != 0:
+                return x0, y0, (a, b, c), distance
+    if mode == "missing_a":
+        while True:
+            y0 = rng.randint(-4, 4)
+            x0 = rng.randint(-4, 4)
+            c = -(y0 + rng.choice([-1, 1]) * distance)
+            if c != 0:
+                return x0, y0, (0, 1, c), distance
+    if mode == "missing_b":
+        while True:
+            x0 = rng.randint(-4, 4)
+            y0 = rng.randint(-4, 4)
+            c = -(x0 + rng.choice([-1, 1]) * distance)
+            if c != 0:
+                return x0, y0, (1, 0, c), distance
+
+    distance = rng.randint(1, 3)
+    line = rng.choice([(3, 4, 0), (4, 3, 0), (-3, 4, 0)])
+    a, b, c = line
+    scale = distance
+    x0, y0 = a * scale, b * scale
+    actual_distance = 5 * distance
+    return x0, y0, line, actual_distance
+
+
 def circle_standard_text(h: int, k: int, r: int) -> str:
     return f"(x {(-h):+d})^2+(y {(-k):+d})^2={r*r}"
 
@@ -540,29 +612,16 @@ def gen_c9_line_intersection_question(rng: random.Random, qtype: str) -> Questio
 
 
 def gen_c9_line_angle_question(rng: random.Random, qtype: str) -> Question:
-    cases = [
-        ((1, 0, 0), (0, 1, 0), "90°"),
-        ((1, -1, 0), (1, 1, 0), "90°"),
-        ((1, 0, 0), (1, -1, 0), "45°"),
-        ((0, 1, 0), (1, -1, 0), "45°"),
-    ]
-    d1, d2, answer = rng.choice(cases)
-    prompt = f"Tính góc giữa hai đường thẳng $d_1:{line_general_text(*d1)}$ và $d_2:{line_general_text(*d2)}$."
+    d1, d2, angle, explanation = angle_line_pair(rng)
+    answer = f"{angle}°"
+    prompt = f"Tính góc giữa hai đường thẳng $d_1$: {d1} và $d_2$: {d2}."
     distractors = ["0°", "30°", "45°", "60°", "90°"]
-    explanation = "Dùng công thức góc giữa hai đường thẳng qua vectơ pháp tuyến hoặc hệ số góc; chọn góc nhọn hoặc góc vuông giữa hai đường thẳng."
     return make_mcq(rng, "c9_line_goc", prompt, answer, distractors, explanation)
 
 
 def gen_c9_line_distance_question(rng: random.Random, qtype: str) -> Question:
-    x0, y0 = rng.randint(-4, 4), rng.randint(-4, 4)
-    distance = rng.randint(1, 6)
-    horizontal = rng.choice([True, False])
-    if horizontal:
-        line = (0, 1, -(y0 + distance))
-        prompt = f"Tính khoảng cách từ điểm $M{point_text(x0, y0)}$ đến đường thẳng $d:{line_general_text(*line)}$."
-    else:
-        line = (1, 0, -(x0 + distance))
-        prompt = f"Tính khoảng cách từ điểm $M{point_text(x0, y0)}$ đến đường thẳng $d:{line_general_text(*line)}$."
+    x0, y0, line, distance = distance_line_case(rng)
+    prompt = f"Tính khoảng cách từ điểm $M{point_text(x0, y0)}$ đến đường thẳng $d:{line_general_text(*line)}$."
     answer = str(distance)
     distractors = [str(distance + d) for d in [-2, -1, 1, 2] if distance + d > 0]
     explanation = "Áp dụng công thức $d(M,ax+by+c=0)=\\frac{|ax_0+by_0+c|}{\\sqrt{a^2+b^2}}$."
@@ -1334,20 +1393,11 @@ def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
         answer = decimal_comma(x0 if ask_x else y0)
         explanation = f"Giải hệ hai phương trình được giao điểm $I{point_text(x0, y0)}$."
     elif topic == "c9_line_goc":
-        cases = [
-            ((1, 0, 0), (0, 1, 0), 90),
-            ((1, -1, 0), (1, 1, 0), 90),
-            ((1, 0, 0), (1, -1, 0), 45),
-            ((0, 1, 0), (1, -1, 0), 45),
-        ]
-        d1, d2, angle = rng.choice(cases)
-        prompt = f"Tính số đo góc giữa hai đường thẳng $d_1:{line_general_text(*d1)}$ và $d_2:{line_general_text(*d2)}$ theo độ."
+        d1, d2, angle, explanation = angle_line_pair(rng)
+        prompt = f"Tính số đo góc giữa hai đường thẳng $d_1$: {d1} và $d_2$: {d2} theo độ."
         answer = decimal_comma(angle)
-        explanation = "Dùng công thức góc giữa hai đường thẳng; kết quả là góc nhọn hoặc góc vuông."
     elif topic == "c9_line_khoang_cach":
-        x0, y0 = rng.randint(-4, 4), rng.randint(-4, 4)
-        distance = rng.randint(1, 6)
-        line = (0, 1, -(y0 + distance))
+        x0, y0, line, distance = distance_line_case(rng)
         prompt = f"Tính khoảng cách từ điểm $M{point_text(x0, y0)}$ đến đường thẳng $d:{line_general_text(*line)}$."
         answer = decimal_comma(distance)
         explanation = "Áp dụng công thức khoảng cách từ điểm đến đường thẳng."
