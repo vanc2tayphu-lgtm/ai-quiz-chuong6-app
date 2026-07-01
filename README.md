@@ -7,13 +7,13 @@
 - Giáo viên chọn theo 3 tầng: `Chọn chương`, `Chọn bài`, rồi `Dạng cụ thể`.
   - Bài 15: tính giá trị, điểm thuộc đồ thị, tập xác định, tập xác định chứa tham số, đồng biến/nghịch biến, đồng biến/nghịch biến chứa tham số, bảng dữ liệu thực tế.
   - Bài 16: xác định hàm số bậc hai, đỉnh/trục đối xứng, giao điểm với trục, cực trị/đơn điệu, bảng giá trị/đồ thị, tham số đơn điệu, bài toán thực tế.
-  - Bài 17: xét dấu tam thức, giải bất phương trình, tham số để tam thức không đổi dấu.
+  - Bài 17: xét dấu tam thức, đọc bảng xét dấu/đồ thị, tập xác định căn tam thức, giải bất phương trình, tham số để tam thức không đổi dấu, bài toán thực tiễn.
   - Bài 18: phương trình dạng `√f(x)=g(x)`, `√f(x)=√g(x)`, phương trình trùng phương.
 - Chương 9: phương pháp tọa độ trong mặt phẳng.
   - Tọa độ vectơ: tọa độ điểm/vectơ trong mặt phẳng, độ dài vectơ, tích vô hướng, trung điểm đoạn thẳng, trọng tâm tam giác.
-  - Đường thẳng: phương trình tham số, phương trình tổng quát, vị trí tương đối, giao điểm hai đường thẳng.
+  - Đường thẳng: phương trình tham số, phương trình tổng quát, vị trí tương đối, giao điểm, góc giữa hai đường thẳng, khoảng cách từ điểm đến đường thẳng.
   - Đường tròn: tâm/bán kính, viết phương trình, tiếp tuyến/vị trí tương đối.
-  - Conic: elip, hypebol, parabol.
+  - Conic: elip, hypebol, parabol, bài toán thực tế với conic.
 - Chọn số câu và loại câu hỏi:
   - Trắc nghiệm 4 lựa chọn
   - Đúng/Sai 4 ý a), b), c), d)

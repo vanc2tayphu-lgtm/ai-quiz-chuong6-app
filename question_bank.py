@@ -42,8 +42,11 @@ LESSONS = {
         "description": "Xét dấu tam thức, giải bất phương trình và tham số liên quan.",
         "topics": [
             "tt_xet_dau",
+            "tt_doc_bang_xet_dau",
+            "tt_tap_xac_dinh_can",
             "tt_giai_bpt",
             "tt_tham_so_khong_doi_dau",
+            "tt_bpt_thuc_te",
         ],
     },
     "bai18_pt_quy_bac_hai": {
@@ -74,6 +77,8 @@ LESSONS = {
             "c9_line_phuong_trinh_tong_quat",
             "c9_line_vi_tri_tuong_doi",
             "c9_line_giao_diem",
+            "c9_line_goc",
+            "c9_line_khoang_cach",
         ],
     },
     "bai_c9_3_duong_tron": {
@@ -92,6 +97,7 @@ LESSONS = {
             "c9_conic_elip",
             "c9_conic_hypebol",
             "c9_conic_parabol",
+            "c9_conic_thuc_te",
         ],
     },
 }
@@ -135,8 +141,11 @@ TOPICS = {
     "hsbh_tham_so_don_dieu": "Tìm tham số để hàm số bậc hai đơn điệu",
     "hsbh_thuc_te": "Bài toán thực tế bằng hàm số bậc hai",
     "tt_xet_dau": "Xét dấu tam thức bậc hai",
+    "tt_doc_bang_xet_dau": "Đọc đồ thị/bảng xét dấu tam thức bậc hai",
+    "tt_tap_xac_dinh_can": "Tập xác định của hàm số chứa căn tam thức bậc hai",
     "tt_giai_bpt": "Giải bất phương trình bậc hai",
     "tt_tham_so_khong_doi_dau": "Tham số để tam thức không đổi dấu",
+    "tt_bpt_thuc_te": "Bài toán thực tiễn bằng bất phương trình bậc hai",
     "pt_can_bang_g": "Giải phương trình dạng √f(x) = g(x)",
     "pt_can_bang_can": "Giải phương trình dạng √f(x) = √g(x)",
     "pt_trung_phuong": "Giải phương trình trùng phương",
@@ -151,12 +160,15 @@ TOPICS = {
     "c9_line_phuong_trinh_tong_quat": "Phương trình tổng quát của đường thẳng",
     "c9_line_vi_tri_tuong_doi": "Vị trí tương đối của hai đường thẳng",
     "c9_line_giao_diem": "Tìm giao điểm của hai đường thẳng",
+    "c9_line_goc": "Tính góc giữa hai đường thẳng",
+    "c9_line_khoang_cach": "Khoảng cách từ điểm đến đường thẳng",
     "c9_circle_tam_ban_kinh": "Nhận diện đường tròn, tìm tâm và bán kính",
     "c9_circle_viet_phuong_trinh": "Viết phương trình đường tròn",
     "c9_circle_tiep_tuyen_vi_tri": "Tiếp tuyến và vị trí tương đối với đường tròn",
     "c9_conic_elip": "Phương trình và yếu tố của elip",
     "c9_conic_hypebol": "Phương trình và yếu tố của hypebol",
     "c9_conic_parabol": "Phương trình và yếu tố của parabol",
+    "c9_conic_thuc_te": "Bài toán thực tế với ba đường conic",
     # Các khóa cũ được giữ để những link đã tạo trước đây vẫn mở được.
     "ham_so_gia_tri": "Bài 15 - Hàm số: tính giá trị, xét điểm thuộc đồ thị",
     "ham_so_bac_hai_dinh": "Bài 16 - Hàm số bậc hai: đỉnh, trục đối xứng",
@@ -203,8 +215,11 @@ TOPIC_ALIASES = {
     "hsbh_tham_so_don_dieu": "ham_so_bac_hai_dinh",
     "hsbh_thuc_te": "ham_so_bac_hai_dinh",
     "tt_xet_dau": "dau_tam_thuc",
+    "tt_doc_bang_xet_dau": "dau_tam_thuc",
+    "tt_tap_xac_dinh_can": "bpt_bac_hai",
     "tt_giai_bpt": "bpt_bac_hai",
     "tt_tham_so_khong_doi_dau": "dau_tam_thuc",
+    "tt_bpt_thuc_te": "bpt_bac_hai",
     "pt_can_bang_g": "pt_quy_bac_hai",
     "pt_can_bang_can": "pt_quy_bac_hai",
     "pt_trung_phuong": "pt_quy_bac_hai",
@@ -338,7 +353,13 @@ def line_general_text(a: int, b: int, c: int) -> str:
             return f"-{body}" if coef < 0 else body
         return f"{'+' if coef > 0 else '-'}{body}"
 
-    parts = [term(a, "x", True), term(b, "y")]
+    parts = []
+    first_written = False
+    for coef, var in [(a, "x"), (b, "y")]:
+        rendered = term(coef, var, not first_written)
+        if rendered:
+            parts.append(rendered)
+            first_written = True
     if c:
         parts.append(f"{c:+d}")
     expression = "".join(part for part in parts if part)
@@ -518,6 +539,36 @@ def gen_c9_line_intersection_question(rng: random.Random, qtype: str) -> Questio
     return make_mcq(rng, "c9_line_giao_diem", prompt, answer, distractors, explanation)
 
 
+def gen_c9_line_angle_question(rng: random.Random, qtype: str) -> Question:
+    cases = [
+        ((1, 0, 0), (0, 1, 0), "90°"),
+        ((1, -1, 0), (1, 1, 0), "90°"),
+        ((1, 0, 0), (1, -1, 0), "45°"),
+        ((0, 1, 0), (1, -1, 0), "45°"),
+    ]
+    d1, d2, answer = rng.choice(cases)
+    prompt = f"Tính góc giữa hai đường thẳng $d_1:{line_general_text(*d1)}$ và $d_2:{line_general_text(*d2)}$."
+    distractors = ["0°", "30°", "45°", "60°", "90°"]
+    explanation = "Dùng công thức góc giữa hai đường thẳng qua vectơ pháp tuyến hoặc hệ số góc; chọn góc nhọn hoặc góc vuông giữa hai đường thẳng."
+    return make_mcq(rng, "c9_line_goc", prompt, answer, distractors, explanation)
+
+
+def gen_c9_line_distance_question(rng: random.Random, qtype: str) -> Question:
+    x0, y0 = rng.randint(-4, 4), rng.randint(-4, 4)
+    distance = rng.randint(1, 6)
+    horizontal = rng.choice([True, False])
+    if horizontal:
+        line = (0, 1, -(y0 + distance))
+        prompt = f"Tính khoảng cách từ điểm $M{point_text(x0, y0)}$ đến đường thẳng $d:{line_general_text(*line)}$."
+    else:
+        line = (1, 0, -(x0 + distance))
+        prompt = f"Tính khoảng cách từ điểm $M{point_text(x0, y0)}$ đến đường thẳng $d:{line_general_text(*line)}$."
+    answer = str(distance)
+    distractors = [str(distance + d) for d in [-2, -1, 1, 2] if distance + d > 0]
+    explanation = "Áp dụng công thức $d(M,ax+by+c=0)=\\frac{|ax_0+by_0+c|}{\\sqrt{a^2+b^2}}$."
+    return make_mcq(rng, "c9_line_khoang_cach", prompt, answer, distractors, explanation)
+
+
 def gen_c9_circle_center_radius_question(rng: random.Random, qtype: str) -> Question:
     h, k, r = rng.randint(-5, 5), rng.randint(-5, 5), rng.randint(1, 6)
     prompt = f"Đường tròn $(C): {circle_standard_text(h, k, r)}$ có tâm và bán kính là"
@@ -577,6 +628,29 @@ def gen_c9_parabola_conic_question(rng: random.Random, qtype: str) -> Question:
     distractors = [str(2*p), str(p*p), str(-p), str(p+1)]
     explanation = f"Phương trình chính tắc $y^2=2px$, nên $2p={2*p}$ và $p={p}$."
     return make_mcq(rng, "c9_conic_parabol", prompt, answer, distractors, explanation)
+
+
+def gen_c9_conic_realworld_question(rng: random.Random, qtype: str) -> Question:
+    kind = rng.choice(["ellipse_area", "parabola_lamp"])
+    if kind == "ellipse_area":
+        a = rng.choice([30, 40, 50])
+        b = rng.choice([20, 30])
+        answer_value = 2 * a * b
+        prompt = f"Một công viên dạng elip có bán trục lớn {a} m và bán trục nhỏ {b} m. Diện tích lớn nhất của hình chữ nhật có các cạnh song song trục tọa độ nội tiếp elip bằng bao nhiêu mét vuông?"
+        answer = str(answer_value)
+        distractors = [str(a*b), str(4*a*b), str(a+b), str(2*(a+b))]
+        explanation = "Với elip $x^2/a^2+y^2/b^2=1$, hình chữ nhật nội tiếp lớn nhất có diện tích $2ab$."
+    else:
+        h = rng.choice([20, 30, 40])
+        half_width = rng.choice([20, 30])
+        p_num = half_width * half_width
+        p_den = 2 * h
+        p_value = Fraction(p_num, p_den)
+        prompt = f"Mặt cắt đèn có dạng parabol $y^2=2px$, sâu {h} cm và nửa bề rộng miệng đèn {half_width} cm. Tính tham số tiêu $p$."
+        answer = decimal_comma(p_value)
+        distractors = [decimal_comma(Fraction(p_num, h)), decimal_comma(h), decimal_comma(half_width), decimal_comma(Fraction(h, 2))]
+        explanation = f"Thay điểm mép $({h};{half_width})$ vào $y^2=2px$ được $p=\\frac{{{half_width}^2}}{{2\\cdot {h}}}={answer}$."
+    return make_mcq(rng, "c9_conic_thuc_te", prompt, answer, distractors, explanation)
 
 
 def gen_value_question(rng: random.Random, qtype: str) -> Question:
@@ -845,6 +919,41 @@ def gen_parameter_sign_question(rng: random.Random, qtype: str) -> Question:
     distractors = ["$m<-1$ hoặc $m>2$", "$-1\\le m\\le 2$", "$m\\in\\mathbb{R}$"]
     explanation = "Vì $a=1>0$, tam thức luôn dương khi $\\Delta<0$. Ta có $\\Delta'=m^2-m-2<0$, suy ra $-1<m<2$."
     return make_mcq(rng, "tt_tham_so_khong_doi_dau", prompt, answer, distractors, explanation)
+
+
+def gen_sign_table_question(rng: random.Random, qtype: str) -> Question:
+    r1 = rng.randint(-5, 1)
+    r2 = rng.randint(r1 + 1, 6)
+    a = rng.choice([1, -1])
+    pos, neg = sign_answer(a, r1, r2)
+    prompt = f"Tam thức bậc hai $f(x)$ có hai nghiệm $x_1={r1}$, $x_2={r2}$ và hệ số $a{'>' if a > 0 else '<'}0$. Tập nghiệm của bất phương trình $f(x)\\le 0$ là"
+    answer = inequality_answer(a, r1, r2, "<= 0")
+    distractors = [pos, neg, inequality_answer(a, r1, r2, ">= 0"), "$\\mathbb{R}$"]
+    explanation = "Dựa vào bảng xét dấu của tam thức bậc hai: ngoài khoảng hai nghiệm cùng dấu với a, trong khoảng hai nghiệm trái dấu với a; dấu ≤ lấy thêm hai nghiệm."
+    return make_mcq(rng, "tt_doc_bang_xet_dau", prompt, answer, distractors, explanation)
+
+
+def gen_sqrt_quadratic_domain_question(rng: random.Random, qtype: str) -> Question:
+    r1 = rng.randint(-5, 1)
+    r2 = rng.randint(r1 + 1, 6)
+    a = rng.choice([1, -1])
+    b = -a * (r1 + r2)
+    c = a * r1 * r2
+    answer = inequality_answer(a, r1, r2, ">= 0")
+    prompt = f"Tìm tập xác định của hàm số $y=\\sqrt{{{poly_text(a, b, c)}}}$."
+    distractors = [inequality_answer(a, r1, r2, "<= 0"), "$\\mathbb{R}$", "$\\varnothing$", f"$[{r1}; {r2}]$"]
+    explanation = f"Hàm căn xác định khi biểu thức dưới căn không âm, tức ${poly_text(a,b,c)}\\ge 0$."
+    return make_mcq(rng, "tt_tap_xac_dinh_can", prompt, answer, distractors, explanation)
+
+
+def gen_quadratic_inequality_realworld_question(rng: random.Random, qtype: str) -> Question:
+    low = rng.randint(1, 4)
+    high = low + rng.randint(3, 6)
+    prompt = f"Độ cao của một vật được mô hình bởi $h(t)=-(t-{low})(t-{high})$ mét. Trong khoảng thời gian nào vật ở trên mặt đất, tức $h(t)>0$?"
+    answer = f"$({low}; {high})$"
+    distractors = [f"$(-\\infty; {low})\\cup({high}; +\\infty)$", f"$[{low}; {high}]$", "$\\mathbb{R}$"]
+    explanation = f"Vì $h(t)=-(t-{low})(t-{high})$ có hệ số âm nên $h(t)>0$ giữa hai nghiệm {low} và {high}."
+    return make_mcq(rng, "tt_bpt_thuc_te", prompt, answer, distractors, explanation)
 
 
 def sign_answer(a: int, r1: int, r2: int) -> tuple[str, str]:
@@ -1224,6 +1333,24 @@ def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
         prompt = f"Hai đường thẳng $d_1:{line_general_text(a1,b1,c1)}$ và $d_2:{line_general_text(a2,b2,c2)}$ cắt nhau tại $I(x_0;y_0)$. Tính {'x_0' if ask_x else 'y_0'}."
         answer = decimal_comma(x0 if ask_x else y0)
         explanation = f"Giải hệ hai phương trình được giao điểm $I{point_text(x0, y0)}$."
+    elif topic == "c9_line_goc":
+        cases = [
+            ((1, 0, 0), (0, 1, 0), 90),
+            ((1, -1, 0), (1, 1, 0), 90),
+            ((1, 0, 0), (1, -1, 0), 45),
+            ((0, 1, 0), (1, -1, 0), 45),
+        ]
+        d1, d2, angle = rng.choice(cases)
+        prompt = f"Tính số đo góc giữa hai đường thẳng $d_1:{line_general_text(*d1)}$ và $d_2:{line_general_text(*d2)}$ theo độ."
+        answer = decimal_comma(angle)
+        explanation = "Dùng công thức góc giữa hai đường thẳng; kết quả là góc nhọn hoặc góc vuông."
+    elif topic == "c9_line_khoang_cach":
+        x0, y0 = rng.randint(-4, 4), rng.randint(-4, 4)
+        distance = rng.randint(1, 6)
+        line = (0, 1, -(y0 + distance))
+        prompt = f"Tính khoảng cách từ điểm $M{point_text(x0, y0)}$ đến đường thẳng $d:{line_general_text(*line)}$."
+        answer = decimal_comma(distance)
+        explanation = "Áp dụng công thức khoảng cách từ điểm đến đường thẳng."
     elif topic == "c9_circle_tam_ban_kinh":
         h, k, r = rng.randint(-5, 5), rng.randint(-5, 5), rng.randint(1, 6)
         prompt = f"Đường tròn $(C): {circle_standard_text(h, k, r)}$. Tính bán kính $R$."
@@ -1256,6 +1383,13 @@ def gen_short_answer_question(rng: random.Random, topic: str) -> Question:
         prompt = f"Parabol $y^2={2*p}x$. Tính tham số tiêu $p$."
         answer = decimal_comma(p)
         explanation = f"Vì $y^2=2px$ nên $p={p}$."
+    elif topic == "c9_conic_thuc_te":
+        h = rng.choice([20, 30, 40])
+        half_width = rng.choice([20, 30])
+        p_value = Fraction(half_width * half_width, 2 * h)
+        prompt = f"Mặt cắt đèn có dạng parabol $y^2=2px$, sâu {h} cm và nửa bề rộng miệng đèn {half_width} cm. Tính $p$."
+        answer = decimal_comma(p_value)
+        explanation = f"Thay điểm mép $({h};{half_width})$ vào $y^2=2px$ được $p={answer}$."
     elif topic == "hs_diem_thuoc_do_thi":
         a = rng.choice([1, 2, -1, -2])
         b = rng.randint(-5, 5)
@@ -1429,8 +1563,11 @@ GENERATORS: dict[str, Callable[[random.Random, str], Question]] = {
     "hsbh_tham_so_don_dieu": gen_quadratic_parameter_monotonic_question,
     "hsbh_thuc_te": gen_quadratic_realworld_question,
     "tt_xet_dau": gen_sign_question,
+    "tt_doc_bang_xet_dau": gen_sign_table_question,
+    "tt_tap_xac_dinh_can": gen_sqrt_quadratic_domain_question,
     "tt_giai_bpt": gen_inequality_question,
     "tt_tham_so_khong_doi_dau": gen_parameter_sign_question,
+    "tt_bpt_thuc_te": gen_quadratic_inequality_realworld_question,
     "pt_can_bang_g": gen_sqrt_equals_linear_question,
     "pt_can_bang_can": gen_sqrt_equals_sqrt_question,
     "pt_trung_phuong": gen_reducible_equation_question,
@@ -1445,12 +1582,15 @@ GENERATORS: dict[str, Callable[[random.Random, str], Question]] = {
     "c9_line_phuong_trinh_tong_quat": gen_c9_line_general_question,
     "c9_line_vi_tri_tuong_doi": gen_c9_line_relative_question,
     "c9_line_giao_diem": gen_c9_line_intersection_question,
+    "c9_line_goc": gen_c9_line_angle_question,
+    "c9_line_khoang_cach": gen_c9_line_distance_question,
     "c9_circle_tam_ban_kinh": gen_c9_circle_center_radius_question,
     "c9_circle_viet_phuong_trinh": gen_c9_circle_equation_question,
     "c9_circle_tiep_tuyen_vi_tri": gen_c9_circle_tangent_question,
     "c9_conic_elip": gen_c9_ellipse_question,
     "c9_conic_hypebol": gen_c9_hyperbola_question,
     "c9_conic_parabol": gen_c9_parabola_conic_question,
+    "c9_conic_thuc_te": gen_c9_conic_realworld_question,
     "ham_so_gia_tri": gen_value_question,
     "ham_so_bac_hai_dinh": gen_vertex_question,
     "ham_so_bac_hai_giao_diem": gen_intersection_question,
